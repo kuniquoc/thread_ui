@@ -6,8 +6,7 @@ interface SearchUserAccountProps {
 }
 
 const SearchUserAccount = ({
-    user,
-    followersCount = 0,
+    user,   
 }: SearchUserAccountProps) => {
     const { username, first_name, last_name, avatar } = user;
     const fullName = `${first_name} ${last_name}`.trim();

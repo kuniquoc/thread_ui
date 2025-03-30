@@ -30,15 +30,15 @@ const formatDateTime = (dateString: string) => {
 };
 
 const ThreadComponent = ({
-    id,
+    // id,
     content,
     user,
     images,
     created_at,
-    comments,
+    // comments,
     likes_count,
     is_liked,
-    reposts_count,
+    // reposts_count,
     is_reposted,
     comment_count,
 }: Thread) => {

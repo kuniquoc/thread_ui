@@ -32,7 +32,6 @@ const Navigation = () => {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 	const [threadContent, setThreadContent] = useState('');
-	const [isDraft, setIsDraft] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	// Reset error message when modal closes or operation completes
@@ -105,7 +104,6 @@ const Navigation = () => {
 				if (publish) {
 					props.setOpenModal(undefined);
 				} else {
-					setIsDraft(true);
 					setErrorMessage('Thread saved as draft');
 				}
 			}
