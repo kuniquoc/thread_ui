@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserRegistrationRequest, UserLoginRequest, UserResponse, ApiResponse } from '../types/AppTypes';
+import { UserRegistrationRequest, UserLoginRequest, UserResponse, ApiResponse } from '../types';
 import { API_BASE_URL } from '../config/api';
 
 const API_URL = `${API_BASE_URL}/api`;

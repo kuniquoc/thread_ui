@@ -1,35 +1,36 @@
-import Thread from '../components/Thread';
+import ThreadComponent from '../components/Thread';
 import PageWrapper from '../components/PageWrapper';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useThread } from '../hooks/useThread';
-import { ThreadType } from '../types/AppTypes';
+import { Thread } from '../types';
 
 const Home = () => {
     const { getThreadFeed, loading, error } = useThread();
-    const [threads, setThreads] = useState<ThreadType[]>([]);
+    const [threads, setThreads] = useState<Thread[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
 
-    useEffect(() => {
-        const fetchThreads = async () => {
-            try {
-                const response = await getThreadFeed(page);
-                if (response) {
-                    setThreads(prevThreads =>
-                        page === 1 ? response.results : [...prevThreads, ...response.results]
-                    );
+    const fetchThreads = useCallback(async (pageNumber: number) => {
+        try {
+            const response = await getThreadFeed(pageNumber);
+            if (response) {
+                setThreads(prevThreads =>
+                    pageNumber === 1 ? response.results : [...prevThreads, ...response.results]
+                );
 
-                    // Check if there are more pages
-                    setHasMore(!!response.next);
-                }
-            } catch (error) {
-                console.error('Error fetching threads:', error);
+                // Check if there are more pages
+                setHasMore(!!response.next);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching threads:', error);
+        }
+    }, [getThreadFeed]);
 
-        fetchThreads();
-    }, [page, getThreadFeed]);
+    useEffect(() => {
+        console.log('Fetching threads for page:', page);
+        fetchThreads(page);
+    }, [page]);
 
     const handleLoadMore = () => {
         if (hasMore && !loading) {
@@ -59,7 +60,20 @@ const Home = () => {
                 <div className="w-full">
                     {threads.length > 0 ? (
                         threads.map(thread => (
-                            <Thread key={thread.id} threadId={thread.id.toString()} />
+                            <ThreadComponent
+                                key={thread.id}
+                                id={thread.id}
+                                content={thread.content}
+                                user={thread.user}
+                                images={thread.images}
+                                created_at={thread.created_at}
+                                comments={thread.comments}
+                                likes_count={thread.likes_count}
+                                is_liked={thread.is_liked}
+                                reposts_count={thread.reposts_count}
+                                is_reposted={thread.is_reposted}
+                                comment_count={thread.comment_count}
+                            />
                         ))
                     ) : (
                         <div className="text-center p-4 text-gray-400">No threads found</div>

@@ -7,12 +7,16 @@ import {
 	FiUser,
 	FiX,
 	FiLogOut,
+	FiBell,
+	FiSave,
+	FiAlertCircle,
 } from 'react-icons/fi';
 import { Modal, ModalBody } from 'flowbite-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ActivityIcon } from './icons/ActivityIcon';
 import { useAuth } from '../hooks/useAuth';
+import { useUser } from '../hooks/useUser';
+import { useThread } from '../hooks/useThread';
 
 // Replace Next.js Image with regular img
 const StomanAvatar = '/avatars/stoman-avatar.jpg';
@@ -22,12 +26,97 @@ const Navigation = () => {
 	const props = { openModal, setOpenModal };
 	const [activeTab, setActiveTab] = useState('Home');
 	const { logout } = useAuth();
+	const { user } = useUser();
+	const { createThread, loading, error } = useThread();
 	const navigate = useNavigate();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+	const [threadContent, setThreadContent] = useState('');
+	const [isDraft, setIsDraft] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	// Reset error message when modal closes or operation completes
+	useEffect(() => {
+		if (!openModal || !loading) {
+			setErrorMessage(null);
+		}
+	}, [openModal, loading]);
+
+	// Update error message when there's an error from the hook
+	useEffect(() => {
+		if (error) {
+			setErrorMessage(error);
+		}
+	}, [error]);
 
 	const handleLogout = async () => {
 		await logout();
 		// Redirect to login page after logout
 		navigate('/login');
+	};
+
+	const handleFileAttachment = () => {
+		if (fileInputRef.current) {
+			fileInputRef.current.click();
+		}
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files && event.target.files.length > 0) {
+			const newFiles = Array.from(event.target.files).filter(file =>
+				file.type.startsWith('image/') || file.type.startsWith('video/')
+			);
+			setSelectedFiles(prev => [...prev, ...newFiles]);
+		}
+	};
+
+	const removeSelectedFile = (fileToRemove: File) => {
+		setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
+	};
+
+	// Function to generate preview URLs for files
+	const getFilePreview = (file: File) => {
+		return URL.createObjectURL(file);
+	};
+
+	const saveThread = async (publish = true) => {
+		try {
+			if (threadContent.trim() === '' && selectedFiles.length === 0) {
+				setErrorMessage('Please add some content or media to your thread.');
+				return;
+			}
+
+			setErrorMessage(null);
+
+			const thread = {
+				content: threadContent,
+				media: selectedFiles,
+				isDraft: !publish,
+			};
+
+			const result = await createThread(thread);
+
+			if (result) {
+				// Reset the form
+				setThreadContent('');
+				setSelectedFiles([]);
+
+				// Only close the modal if actually posting (not saving draft)
+				if (publish) {
+					props.setOpenModal(undefined);
+				} else {
+					setIsDraft(true);
+					setErrorMessage('Thread saved as draft');
+				}
+			}
+		} catch (err) {
+			console.error('Error saving thread:', err);
+			setErrorMessage('Failed to save thread. Please try again.');
+		}
+	};
+
+	const handleSaveDraft = () => {
+		saveThread(false);
 	};
 
 	return (
@@ -64,7 +153,7 @@ const Navigation = () => {
 					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
 					onClick={() => setActiveTab('Activity')}
 				>
-					<ActivityIcon className={`text-3xl ${activeTab === 'Activity' && 'bg-white'}`} />
+					<FiBell className={`text-3xl ${activeTab === 'Activity' && 'fill-white'}`} />
 				</Link>
 				<Link
 					to="/profile"
@@ -100,11 +189,7 @@ const Navigation = () => {
 									<div className="border-b border-[#333]">
 										<div className="grid grid-cols-8 py-3 px-4">
 											<button
-												onClick={() =>
-													props.setOpenModal(
-														undefined
-													)
-												}
+												onClick={() => props.setOpenModal(undefined)}
 												type="button"
 												className="absolute text-left pt-1 col-span-1 rounded-lg inline-flex justify-center items-center text-[#bbb] text-xs"
 												data-modal-hide="create-post-modal"
@@ -117,69 +202,121 @@ const Navigation = () => {
 											<h1 className="col-span-7 text-center font-medium">
 												New thread
 											</h1>
+											<button
+												type="button"
+												onClick={handleSaveDraft}
+												disabled={loading}
+												className="absolute right-4 pt-1 rounded-lg inline-flex justify-center items-center text-[#777] hover:text-[#999] disabled:text-[#444] disabled:hover:text-[#444] disabled:cursor-not-allowed"
+											>
+												<FiSave className={loading ? "text-[#444]" : "text-[#777] hover:text-[#999]"} />
+												<span className="sr-only">
+													Save draft
+												</span>
+											</button>
 										</div>
 									</div>
 
 									<form className="space-y-6" action="#">
+										{/* Error message display */}
+										{errorMessage && (
+											<div className="px-4 pt-2 text-center">
+												<div className={`p-2 rounded-md ${errorMessage.includes('saved') ? 'bg-green-800 bg-opacity-20 text-green-400' : 'bg-red-800 bg-opacity-20 text-red-400'} text-xs flex items-center justify-center`}>
+													{errorMessage.includes('saved') ? null : <FiAlertCircle className="mr-1" />}
+													{errorMessage}
+												</div>
+											</div>
+										)}
+
 										<div className="px-4 py-6 flex w-full gap-2">
 											<div className="ml-2">
 												<div className="relative border-l-2 border-[#333] border-opacity-70 ml-2">
 													<div className="flex -ml-7 flex-col w-14 h-28 max-h-28 justify-between items-center">
 														<div>
 															<img
-																src={StomanAvatar}
+																src={user?.avatar || StomanAvatar}
 																width={35}
 																height={35}
 																alt="Account Avatar"
 																className="rounded-full"
 															/>
 														</div>
-														<div className="flex flex-col justify-center items-center">
-															<img
-																src={StomanAvatar}
-																width={16}
-																height={16}
-																alt="Account Avatar"
-																className="rounded-full opacity-30"
-															/>
-														</div>
 													</div>
 												</div>
 											</div>
 											<div className="flex w-full h-full">
-												<div className="space-y-6">
-													<div>
-														<input
-															type="text"
+												<div className="space-y-6 w-full">
+													<div className="flex flex-col items-start">
+														<p className="text-xs text-[#666]">
+															@{user?.username || 'username'}
+														</p>
+													</div>
+													<div className="w-full">
+														<textarea
 															name="post"
 															id="post"
-															className="bg-transparent text-xs border-none w-full focus:border-none ring-0 p-0 focus:ring-0 active:ring-0"
+															className="bg-transparent text-xs border-none w-full resize-none overflow-hidden focus:border-none ring-0 p-0 focus:ring-0 active:ring-0"
 															required
-														></input>
+															placeholder="Start a thread..."
+															rows={1}
+															style={{ minHeight: '20px', height: 'auto' }}
+															value={threadContent}
+															onChange={(e) => setThreadContent(e.target.value)}
+															onInput={(e) => {
+																e.currentTarget.style.height = 'auto';
+																e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+															}}
+														></textarea>
+
+														{selectedFiles.length > 0 && (
+															<div className="mt-3">
+																<div className="flex gap-2 overflow-x-auto pb-2">
+																	{selectedFiles.map((file, index) => (
+																		<div key={index} className="relative min-w-[100px] h-[100px] bg-[#333] rounded-md">
+																			{file.type.startsWith('image/') ? (
+																				<img
+																					src={getFilePreview(file)}
+																					alt={`Preview ${index}`}
+																					className="w-full h-full object-cover rounded-md"
+																				/>
+																			) : file.type.startsWith('video/') ? (
+																				<video
+																					src={getFilePreview(file)}
+																					className="w-full h-full object-cover rounded-md"
+																					controls
+																				/>
+																			) : null}
+																			<button
+																				type="button"
+																				onClick={() => removeSelectedFile(file)}
+																				className="absolute top-1 right-1 bg-[#111] bg-opacity-70 rounded-full p-1 text-white"
+																			>
+																				<FiX size={14} />
+																			</button>
+																		</div>
+																	))}
+																</div>
+															</div>
+														)}
 													</div>
 
-													<button
-														type="button"
-														onClick={() =>
-															props.setOpenModal(
-																undefined
-															)
-														}
-														data-modal-hide="create-post-modal"
-													>
-														<FiPaperclip className="text-[#777]" />
-													</button>
-
-													<div>
+													<div className="flex space-x-3">
 														<input
-															type="text"
-															name="post"
-															id="post"
-															className="bg-transparent text-xs border-none w-full focus:border-none ring-0 p-0 focus:ring-0 active:ring-0"
-															required
-															placeholder="Add to thread"
-														></input>
+															type="file"
+															ref={fileInputRef}
+															className="hidden"
+															onChange={handleFileChange}
+															multiple
+															accept="image/*"
+														/>
+														<button
+															type="button"
+															onClick={handleFileAttachment}
+														>
+															<FiPaperclip className="text-[#777] hover:text-[#999]" />
+														</button>
+														{/* Save button moved to header */}
 													</div>
+
 												</div>
 												<button
 													type="button"
@@ -200,16 +337,16 @@ const Navigation = () => {
 												<p>Anyone can reply</p>
 											</div>
 											<button
-												onClick={() =>
-													props.setOpenModal(
-														undefined
-													)
-												}
-												type="submit"
-												className="text-left col-span-1 rounded-lg inline-flex justify-center items-center text-blue-400 text-sm font-medium"
+												onClick={(e) => {
+													e.preventDefault();
+													saveThread(true);
+												}}
+												type="button"
+												disabled={loading}
+												className="text-left col-span-1 rounded-lg inline-flex justify-center items-center text-blue-400 text-sm font-medium disabled:text-opacity-50 disabled:cursor-not-allowed"
 												data-modal-hide="create-post-modal"
 											>
-												Post
+												{loading ? 'Posting...' : 'Post'}
 												<span className="sr-only">
 													Post
 												</span>
