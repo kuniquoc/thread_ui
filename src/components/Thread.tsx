@@ -11,6 +11,24 @@ import BlueCheckmark from '/avatars/blue-checkmark.png';
 import cn from 'classnames';
 import { Thread } from '../types/ThreadTypes';
 
+// Utility function to format date and time
+const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+
+    // Format time: HH:MM
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const time = `${hours}:${minutes}`;
+
+    // Format date: DD/MM/YYYY
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const formattedDate = `${day}/${month}/${year}`;
+
+    return `${time} · ${formattedDate}`;
+};
+
 const ThreadComponent = ({
     id,
     content,
@@ -24,8 +42,11 @@ const ThreadComponent = ({
     is_reposted,
     comment_count,
 }: Thread) => {
+    // Format the created_at string
+    const formattedDateTime = formatDateTime(created_at);
+
     return (
-        <div className="px-4 my-4 w-full font-sans">
+        <div className="px-4 my-4 w-200 font-sans">
             {is_reposted ? (
                 <div className="flex justify-start items-center gap-2 ml-4 text-xs mb-1 text-[#777]">
                     <FiRepeat className="-rotate-12 sm:text-xl" />
@@ -88,7 +109,7 @@ const ThreadComponent = ({
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="text-xs sm:text-sm text-gray-500">
-                                {created_at}
+                                {formattedDateTime}
                             </span>
                             <a href="#">
                                 <FiMoreHorizontal className="text-gray-100" />

@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import Home from '../pages/Home';
 import Search from '../pages/Search';
-import Activity from '../pages/Activity';
+import Notification from '../pages/Notification';
 import Profile from '../pages/Profile';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -29,8 +29,8 @@ export const router = createBrowserRouter([
                 element: <Search />
             },
             {
-                path: '/activity',
-                element: <Activity />
+                path: '/notification',
+                element: <Notification />
             },
             {
                 path: '/profile',

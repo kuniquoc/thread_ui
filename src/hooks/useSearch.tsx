@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AccountType, PaginatedResponse, ApiResponse } from '../types/AppTypes';
+import { UserResponse, PaginatedResponse } from '../types';
 import { API_BASE_URL } from '../config/api';
 
 const API_URL = `${API_BASE_URL}/api`;
@@ -7,18 +7,18 @@ const API_URL = `${API_BASE_URL}/api`;
 export const useSearch = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [results, setResults] = useState<AccountType[]>([]);
+    const [results, setResults] = useState<UserResponse[]>([]);
     const [pagination, setPagination] = useState<{
         count: number;
         next: string | null;
         previous: string | null;
     } | null>(null);
 
-    const searchUsers = async (query: string, page: number = 1): Promise<PaginatedResponse<AccountType> | null> => {
+    const searchUsers = async (query: string, page: number = 1): Promise<PaginatedResponse<UserResponse> | null> => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/users/search?q=${encodeURIComponent(query)}&page=${page}`, {
+            const response = await fetch(`${API_URL}/users/?search=${encodeURIComponent(query)}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export const useSearch = () => {
         }
     };
 
-    const loadMore = async (url: string): Promise<PaginatedResponse<AccountType> | null> => {
+    const loadMore = async (url: string): Promise<PaginatedResponse<UserResponse> | null> => {
         setLoading(true);
         setError(null);
         try {

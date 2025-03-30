@@ -1,5 +1,3 @@
-import Image from 'next/image';
-import BlueCheckmark from '/avatars/blue-checkmark.png';
 import { AccountType } from '../../types/AppTypes';
 
 const UserAccount = ({
@@ -12,11 +10,11 @@ const UserAccount = ({
 	followersCount,
 }: AccountType) => {
 	return (
-		<div className="px-4 w-full my-4 clear-both">
+		<div className="px-4 w-200 my-4 clear-both">
 			<div className="flex justify-start items-start gap-4">
 				<div className="">
-					<Image
-						src={avatar || ''}  // Add fallback empty string
+					<img
+						src={avatar || ''}
 						width={70}
 						height={70}
 						alt="Account Avatar"
@@ -28,9 +26,9 @@ const UserAccount = ({
 						<p className="text-sm text-gray-100 leading-none">
 							{username}
 						</p>
-						{isVerified && BlueCheckmark && (
-							<Image
-								src={BlueCheckmark}
+						{isVerified && (
+							<img
+								src="/avatars/blue-checkmark.png"
 								width={14}
 								height={14}
 								alt="Blue Checkmark"
@@ -42,15 +40,15 @@ const UserAccount = ({
 					<div className="flex items-center gap-2 mt-3">
 						{followedByAnother ? (
 							<div className="flex">
-								<Image
-									src={followedBy || ''}  // Add fallback empty string
+								<img
+									src={followedBy || ''}
 									width={16}
 									height={16}
 									alt="Account Avatar"
 									className="rounded-full"
 								/>
 								{followedByAnother && (
-									<Image
+									<img
 										src={followedByAnother}
 										width={16}
 										height={16}
@@ -60,8 +58,8 @@ const UserAccount = ({
 								)}
 							</div>
 						) : followedBy ? (
-							<Image
-								src={followedBy || ''}  // Add fallback empty string
+							<img
+								src={followedBy || ''}
 								width={16}
 								height={16}
 								alt="Account Avatar"

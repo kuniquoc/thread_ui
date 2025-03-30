@@ -1,168 +1,120 @@
+import { useState, useEffect } from 'react';
 import PageWrapper from '../components/PageWrapper';
-import UserAccount from '../components/search/UserAccount';
-import YusufAvatar from '/avatars/hamza-yusuf-avatar.png';
-import RonaldoAvatar from '/avatars/ronaldo-avatar.jpg';
-import RashidAvatar from '/avatars/rashid-khan-avatar.jpg';
-import AppleLogo from '/logo/apple-logo.jpg';
-import SmashingMagLogo from '/logo/smashing-magazine-logo.jpg';
-import AlokozayLogo from '/logo/alokozay-logo.jpg';
-import RealMadridLogo from '/logo/real-madrid-logo.jpg';
-import GoogleLogo from '/logo/google-logo.jpg';
-import NikeLogo from '/logo/nike-logo.jpg';
-import ZuckAvatar from '/avatars/zuck-avatar.jpg';
-import SalahAvatar from '/avatars/mohammed-salah-avatar.jpg';
+import SearchUserAccount from '../components/search/SearchUserAccount';
 
-const search = () => {
+import { useSearch } from '../hooks/useSearch';
+
+const Search = () => {
+    const [query, setQuery] = useState<string>('');
+    const [page, setPage] = useState<number>(1);
+    const { results, loading, error, pagination, searchUsers, loadMore } = useSearch();
+
+    // Handle search input changes
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setQuery(e.target.value);
+    };
+
+    // Handle search form submission
+    const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setPage(1); // Reset to first page on new search
+        if (query.trim()) {
+            searchUsers(query);
+        }
+    };
+
+    // Perform initial search when component mounts (optional)
+    useEffect(() => {
+        searchUsers('');
+    }, []);
+
+    // Handle load more button click
+    const handleLoadMore = () => {
+        if (pagination?.next && !loading) {
+            loadMore(pagination.next);
+        }
+    };
+
     return (
         <PageWrapper>
             <div className="pt-5 pb-16 flex flex-col items-center overflow-y-auto hide-scrollbar">
                 {/* Header section */}
-                <header className="w-full px-4">
+                <header className="w-full px-4 flex flex-col items-center">
                     <h1 className="text-4xl font-semibold mb-2">Search</h1>
                     <div>
-                        <form action="#">
+                        <form onSubmit={handleSearchSubmit}>
                             <label htmlFor="search">
                                 <input
                                     type="search"
                                     id="search"
                                     placeholder="Search"
-                                    className="w-full border-none rounded-lg text-md px-3 py-2 bg-[#333] text-gray-200"
+                                    className="w-200 border-none rounded-lg text-md px-3 py-2 bg-[#333] text-gray-200"
+                                    value={query}
+                                    onChange={handleSearchChange}
                                 />
                             </label>
                         </form>
                     </div>
                 </header>
 
-                {/* Dynamic Search Account */}
-                <UserAccount
-                    avatar={YusufAvatar}
-                    username="hamzayusuf"
-                    fullName="Hamza Yusuf"
-                    isVerified={true}
-                    followedBy={RonaldoAvatar}
-                    followedByAnother={RashidAvatar}
-                    followersCount="2m"
-                />
+                {/* Loading indicator */}
+                {loading && page === 1 && (
+                    <div className="my-4 text-center">
+                        <p>Loading...</p>
+                    </div>
+                )}
 
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
+                {/* Error message */}
+                {error && (
+                    <div className="my-4 text-center text-red-500">
+                        <p>Error: {error}</p>
+                    </div>
+                )}
 
-                {/* Dynamic Search Account */}
-                <UserAccount
-                    avatar={AppleLogo}
-                    username="apple"
-                    fullName="Apple Inc"
-                    isVerified={true}
-                    followedBy={RashidAvatar}
-                    followersCount="780k"
-                />
+                {/* Search results */}
+                {!loading && !error && results.length === 0 && (
+                    <div className="my-4 text-center">
+                        <p>No results found</p>
+                    </div>
+                )}
 
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
+                {/* Display search results */}
+                {results.map((user, index) => (
+                    <div key={user.id} className="w-full">
+                        <SearchUserAccount
+                            user={user}
+                            followersCount={Math.floor(Math.random() * 1000000)} // Example follower count
+                        />
+                        {index < results.length - 1 && (
+                            <div className="border border-[#222] border-opacity-50 w-full"></div>
+                        )}
+                    </div>
+                ))}
 
-                <UserAccount
-                    avatar={AlokozayLogo}
-                    username="alokozay"
-                    fullName="Alokozay Group"
-                    isVerified={true}
-                    followersCount="10m"
-                />
+                {/* Loading more indicator */}
+                {loading && page > 1 && (
+                    <div className="text-center p-4 text-gray-400">
+                        Loading more results...
+                    </div>
+                )}
 
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
+                {/* Load more button */}
+                {pagination?.next && !loading && (
+                    <button
+                        onClick={handleLoadMore}
+                        className="w-full max-w-md py-3 mt-4 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                        Load more results
+                    </button>
+                )}
 
-                <UserAccount
-                    avatar={RonaldoAvatar}
-                    username="cristiano"
-                    fullName="Cristiano Ronaldo"
-                    isVerified={true}
-                    followersCount="90m"
-                    followedBy={RashidAvatar}
-                    followedByAnother={SalahAvatar}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={SmashingMagLogo}
-                    username="smashingmag"
-                    fullName="Smashing Magazine"
-                    isVerified={true}
-                    followersCount="190k"
-                    followedBy={AppleLogo}
-                    followedByAnother={GoogleLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={RashidAvatar}
-                    username="rashidkhan"
-                    fullName="Rashid Khan"
-                    isVerified={true}
-                    followersCount="190k"
-                    followedBy={NikeLogo}
-                    followedByAnother={RonaldoAvatar}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={NikeLogo}
-                    username="nike"
-                    fullName="Nike"
-                    isVerified={true}
-                    followersCount="700k"
-                    followedBy={RealMadridLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={GoogleLogo}
-                    username="Google"
-                    fullName="Google Inc"
-                    isVerified={true}
-                    followersCount="1.2m"
-                    followedBy={AppleLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={ZuckAvatar}
-                    username="zuck"
-                    fullName="Mark Zuckerberg"
-                    isVerified={true}
-                    followersCount="5m"
-                    followedBy={SmashingMagLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={RealMadridLogo}
-                    username="realmadrid"
-                    fullName="Real Madrid"
-                    isVerified={true}
-                    followersCount="50m"
-                    followedBy={RonaldoAvatar}
-                    followedByAnother={NikeLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
-
-                <UserAccount
-                    avatar={SalahAvatar}
-                    username="mosalah"
-                    fullName="Mohamed Salah"
-                    isVerified={true}
-                    followersCount="5m"
-                    followedBy={RonaldoAvatar}
-                    followedByAnother={NikeLogo}
-                />
-
-                <div className="border border-[#222] border-opacity-50 w-full"></div>
+                {/* End of results message */}
+                {!pagination?.next && results.length > 0 && (
+                    <div className="text-center p-4 text-gray-500">You've reached the end</div>
+                )}
             </div>
         </PageWrapper>
     );
 };
 
-export default search;
+export default Search;

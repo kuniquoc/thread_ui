@@ -149,9 +149,9 @@ const Navigation = () => {
 					<FiEdit className="text-3xl" />
 				</button>
 				<Link
-					to="/activity"
+					to="/notification"
 					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
-					onClick={() => setActiveTab('Activity')}
+					onClick={() => setActiveTab('Notification')}
 				>
 					<FiBell className={`text-3xl ${activeTab === 'Activity' && 'fill-white'}`} />
 				</Link>
