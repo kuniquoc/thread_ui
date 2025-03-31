@@ -1,13 +1,11 @@
-'use client';
-
-import { useState } from 'react';
+// import { useState } from 'react';
 import PageWrapper from '../components/PageWrapper';
 import NotificationList from '../components/notification/NotificationList';
-import { useNotification } from '../hooks/useNotification';
+// import { useNotification } from '../hooks/useNotification';
 
 const Notification = () => {
-    const { markAllAsRead } = useNotification();
-    const [refreshKey, setRefreshKey] = useState(0);
+    // const { markAllAsRead } = useNotification();
+    // const [refreshKey, setRefreshKey] = useState(0);
 
     // const handleMarkAllAsRead = async () => {
     //     await markAllAsRead();
@@ -34,7 +32,8 @@ const Notification = () => {
                 </header>
 
                 {/* Notifications List with key for forcing refresh */}
-                <NotificationList key={refreshKey} />
+                {/* <NotificationList key={refreshKey} /> */}
+                <NotificationList />
             </div>
         </PageWrapper>
     );
