@@ -15,6 +15,8 @@ export interface Comment {
     likes_count: number;
     is_liked: boolean;
     replies_count: number;
+    reposts_count?: number;
+    is_reposted?: boolean;
 }
 
 export interface CommentsResponse {
@@ -38,4 +40,9 @@ export interface CreateCommentResponse extends Comment {
 export interface LikeCommentResponse {
     likes_count: number;
     is_liked: boolean;
+}
+
+export interface RepostCommentResponse {
+    reposts_count: number;
+    is_reposted: boolean;
 }

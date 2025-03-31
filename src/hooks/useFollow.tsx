@@ -1,116 +1,102 @@
-// import { useState } from 'react';
-// import { FollowType, FollowRequest, FollowResponse, FollowCountResponse, PaginatedResponse } from '../types/AppTypes';
-// import { API_BASE_URL } from '../config/api';
+import { useState } from 'react';
+import {
+    Follow,
+    FollowsResponse,
+    FollowRequest,
+    FollowersCountResponse
+} from '../types/FollowTypes';
+import { API_BASE_URL } from '../config/api';
 
-// const API_URL = `${API_BASE_URL}/api`;
+const API_URL = `${API_BASE_URL}/api`;
 
-// export const useFollow = () => {
-//     const [loading, setLoading] = useState(false);
-//     const [error, setError] = useState<string | null>(null);
+export const useFollow = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [follows, setFollows] = useState<Follow[]>([]);
 
-//     const getFollowers = async (userId: number): Promise<PaginatedResponse<FollowType> | null> => {
-//         try {
-//             setLoading(true);
-//             setError(null);
-//             const response = await fetch(`${API_URL}/follows/followers/${userId}/`, {
-//                 credentials: 'include',
-//             });
-//             if (!response.ok) throw new Error('Failed to fetch followers');
-//             const data = await response.json();
-//             return data;
-//         } catch (err: any) {
-//             setError(err.message);
-//             return null;
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
+    // Get following list
+    const getFollowingList = async (page: number = 1): Promise<FollowsResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/follows/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to fetch following list');
+            }
+            setFollows(result.results);
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch following list');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-//     const getFollowing = async (userId: number): Promise<PaginatedResponse<FollowType> | null> => {
-//         try {
-//             setLoading(true);
-//             setError(null);
-//             const response = await fetch(`${API_URL}/follows/following/${userId}/`, {
-//                 credentials: 'include',
-//             });
-//             if (!response.ok) throw new Error('Failed to fetch following');
-//             const data = await response.json();
-//             return data;
-//         } catch (err: any) {
-//             setError(err.message);
-//             return null;
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
+    // Follow or unfollow a user
+    const followUser = async (data: FollowRequest): Promise<Follow | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/follows/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to follow/unfollow user');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to follow/unfollow user');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-//     const followUser = async (userId: number): Promise<FollowResponse | null> => {
-//         try {
-//             setLoading(true);
-//             setError(null);
-//             const followRequest: FollowRequest = {
-//                 followed_id: userId
-//             };
-//             const response = await fetch(`${API_URL}/follows/`, {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//                 credentials: 'include',
-//                 body: JSON.stringify(followRequest),
-//             });
-//             if (!response.ok) throw new Error('Failed to follow user');
-//             const data = await response.json();
-//             return data;
-//         } catch (err: any) {
-//             setError(err.message);
-//             return null;
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
+    // Get followers count
+    const getFollowersCount = async (): Promise<FollowersCountResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/follows/followers_count/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to fetch followers count');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch followers count');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-//     const unfollowUser = async (userId: number): Promise<void> => {
-//         try {
-//             setLoading(true);
-//             setError(null);
-//             const response = await fetch(`${API_URL}/follows/${userId}/`, {
-//                 method: 'DELETE',
-//                 credentials: 'include',
-//             });
-//             if (!response.ok) throw new Error('Failed to unfollow user');
-//         } catch (err: any) {
-//             setError(err.message);
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-
-//     const getFollowersCount = async (userId: number): Promise<FollowCountResponse | null> => {
-//         try {
-//             setLoading(true);
-//             setError(null);
-//             const response = await fetch(`${API_URL}/follows/followers/${userId}/count/`, {
-//                 credentials: 'include',
-//             });
-//             if (!response.ok) throw new Error('Failed to fetch followers count');
-//             const data = await response.json();
-//             return data;
-//         } catch (err: any) {
-//             setError(err.message);
-//             return null;
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-
-//     return {
-//         loading,
-//         error,
-//         getFollowers,
-//         getFollowing,
-//         followUser,
-//         unfollowUser,
-//         getFollowersCount,
-//     };
-// };
+    return {
+        follows,
+        loading,
+        error,
+        getFollowingList,
+        followUser,
+        getFollowersCount
+    };
+};

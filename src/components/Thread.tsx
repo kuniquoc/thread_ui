@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     FiHeart,
     FiMessageCircle,
@@ -10,6 +11,10 @@ import BlueCheckmark from '/avatars/blue-checkmark.png';
 
 import cn from 'classnames';
 import { Thread } from '../types/ThreadTypes';
+import { useComment } from '../hooks/useComment';
+import { useThread } from '../hooks/useThread';
+import Comment from './profile/Comment';
+import CommentInput from './profile/CommentInput';
 
 // Utility function to format date and time
 const formatDateTime = (dateString: string) => {
@@ -29,25 +34,109 @@ const formatDateTime = (dateString: string) => {
     return `${time} · ${formattedDate}`;
 };
 
+// Define the type for the component's props, removing the redundant "comments" prop
+type ThreadComponentProps = Omit<Thread, 'comments'>;
+
 const ThreadComponent = ({
-    // id,
+    id,
     content,
     user,
     images,
     created_at,
-    // comments,
-    likes_count,
-    is_liked,
-    // reposts_count,
-    is_reposted,
+    likes_count: initialLikesCount,
+    is_liked: initialIsLiked,
+    reposts_count: initialRepostsCount,
+    is_reposted: initialIsReposted,
     comment_count,
-}: Thread) => {
+}: ThreadComponentProps) => {
+    // State for handling UI interactions
+    const [showComments, setShowComments] = useState(false);
+    const [showCommentInput, setShowCommentInput] = useState(false);
+    const [loadedComments, setLoadedComments] = useState<any[]>([]);
+    const [isLoadingComments, setIsLoadingComments] = useState(false);
+
+    // State for tracking likes and reposts
+    const [likesCount, setLikesCount] = useState(initialLikesCount);
+    const [isLiked, setIsLiked] = useState(initialIsLiked);
+    const [repostsCount, setRepostsCount] = useState(initialRepostsCount);
+    const [isReposted, setIsReposted] = useState(initialIsReposted);
+
     // Format the created_at string
     const formattedDateTime = formatDateTime(created_at);
 
+    // Hooks for thread and comment operations
+    const { likeThread, repostThread } = useThread();
+    const { getComments, createComment } = useComment();
+
+    const handleCommentClick = async () => {
+        if (!showComments) {
+            setIsLoadingComments(true);
+            try {
+                const response = await getComments(id);
+                if (response) {
+                    setLoadedComments(response.results);
+                }
+            } catch (error) {
+                console.error('Failed to load comments', error);
+            } finally {
+                setIsLoadingComments(false);
+            }
+        }
+        setShowComments(!showComments);
+        setShowCommentInput(!showCommentInput);
+    };
+
+    const handleLike = async () => {
+        try {
+            const response = await likeThread(id);
+            if (response) {
+                setIsLiked(response.is_liked);
+                setLikesCount(response.likes_count);
+            }
+        } catch (error) {
+            console.error('Failed to like thread', error);
+        }
+    };
+
+    const handleRepost = async () => {
+        try {
+            const response = await repostThread(id);
+            if (response) {
+                setIsReposted(response.is_reposted);
+                setRepostsCount(response.reposts_count);
+            }
+        } catch (error) {
+            console.error('Failed to repost thread', error);
+        }
+    };
+
+    const handleCommentSubmit = async (content: string) => {
+        try {
+            const response = await createComment(id, { content, parent_comment_id: null });
+            if (response) {
+                // Add the new comment to the list
+                setLoadedComments([response, ...loadedComments]);
+            }
+        } catch (error) {
+            console.error('Failed to create comment', error);
+        }
+    };
+
+    const handleReplySuccess = async () => {
+        // Refresh comments after a successful reply
+        try {
+            const response = await getComments(id);
+            if (response) {
+                setLoadedComments(response.results);
+            }
+        } catch (error) {
+            console.error('Failed to refresh comments', error);
+        }
+    };
+
     return (
         <div className="px-4 my-4 w-200 font-sans">
-            {is_reposted ? (
+            {isReposted ? (
                 <div className="flex justify-start items-center gap-2 ml-4 text-xs mb-1 text-[#777]">
                     <FiRepeat className="-rotate-12 sm:text-xl" />
                     <span>Reposted</span>
@@ -140,30 +229,79 @@ const ThreadComponent = ({
                         </div>
 
                         <div className="flex gap-4 mt-3 sm:mt-4">
-                            <button type="button">
+                            <button type="button" onClick={handleLike}>
                                 <FiHeart
                                     className={
-                                        is_liked
+                                        isLiked
                                             ? 'fill-red-600 text-red-600 sm:text-xl'
                                             : 'fill-none text-gray-100 sm:text-xl'
                                     }
                                 />
                             </button>
-                            <button type="button">
+                            <button type="button" onClick={handleCommentClick}>
                                 <FiMessageCircle className="text-gray-100 -rotate-90 sm:text-xl" />
                             </button>
-                            <button type="button">
-                                <FiRepeat className="text-gray-100  -rotate-12 sm:text-xl" />
+                            <button type="button" onClick={handleRepost}>
+                                <FiRepeat
+                                    className={
+                                        isReposted
+                                            ? 'text-green-500 -rotate-12 sm:text-xl'
+                                            : 'text-gray-100 -rotate-12 sm:text-xl'
+                                    }
+                                />
                             </button>
                             <button type="button">
                                 <FiNavigation className="text-gray-100 sm:text-xl" />
                             </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
-                            {comment_count > 0 ? <p>{comment_count} replies</p> : ''}
-                            {comment_count > 0 && likes_count > 0 ? <span>.</span> : ''}
-                            {likes_count > 0 ? <p>{likes_count} likes</p> : ''}
+                            {comment_count > 0 ? (
+                                <button
+                                    className="text-blue-400 hover:underline"
+                                    onClick={handleCommentClick}
+                                >
+                                    {showComments ? "Hide replies" : `${comment_count} replies`}
+                                </button>
+                            ) : ''}
+                            {comment_count > 0 && likesCount > 0 ? <span>.</span> : ''}
+                            {likesCount > 0 ? <p>{likesCount} likes</p> : ''}
                         </div>
+
+                        {/* Comment input section - replaced with CommentInput component */}
+                        {showCommentInput && (
+                            <CommentInput
+                                avatar={user.avatar}
+                                onSubmit={handleCommentSubmit}
+                                placeholder="Post your reply"
+                            />
+                        )}
+
+                        {/* Comments section */}
+                        {isLoadingComments && (
+                            <div className="mt-4 text-center text-gray-400">Loading comments...</div>
+                        )}
+
+                        {showComments && loadedComments.length > 0 && (
+                            <div className="mt-4">
+                                {loadedComments.map((comment) => (
+                                    <Comment
+                                        key={comment.id}
+                                        id={comment.id}
+                                        threadId={id}
+                                        avatar={comment.user.avatar}
+                                        username={comment.user.username}
+                                        isVerified={comment.user.username.includes('verified')}
+                                        content={comment.content}
+                                        publishTime={comment.created_at}
+                                        isLiked={comment.is_liked}
+                                        totalReplies={comment.replies_count}
+                                        totalLikes={comment.likes_count}
+                                        isReposted={comment.is_reposted}
+                                        onReplySuccess={handleReplySuccess}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
