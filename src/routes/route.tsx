@@ -6,16 +6,13 @@ import Notification from '../pages/Notification';
 import Profile from '../pages/Profile';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 
 export const router = createBrowserRouter([
     {
         path: '/',
         element: <App />,
         children: [
-            {
-                index: true,
-                element: <Home />
-            },
             {
                 path: '/login',
                 element: <LoginPage />
@@ -25,16 +22,25 @@ export const router = createBrowserRouter([
                 element: <RegisterPage />
             },
             {
-                path: '/search',
-                element: <Search />
-            },
-            {
-                path: '/notification',
-                element: <Notification />
-            },
-            {
-                path: '/profile',
-                element: <Profile />
+                element: <ProtectedRoute />,
+                children: [
+                    {
+                        index: true,
+                        element: <Home />
+                    },
+                    {
+                        path: '/search',
+                        element: <Search />
+                    },
+                    {
+                        path: '/notification',
+                        element: <Notification />
+                    },
+                    {
+                        path: '/profile',
+                        element: <Profile />
+                    }
+                ]
             }
         ]
     }

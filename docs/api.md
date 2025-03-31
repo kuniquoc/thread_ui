@@ -363,7 +363,7 @@ The API includes automatic content moderation for threads and comments. When cre
   {
     "reposts_count": 4,
     "is_reposted": true
-  }
+  }**
   ```
 
 ````

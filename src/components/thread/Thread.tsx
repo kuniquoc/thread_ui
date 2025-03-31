@@ -1,4 +1,4 @@
-import { useState} from 'react';
+import { useState, useEffect } from 'react';
 import {
     FiHeart,
     FiMessageCircle,
@@ -100,6 +100,7 @@ const ThreadComponent = ({
         try {
             const response = await likeThread(id);
             if (response) {
+                // Force state update to trigger re-render
                 setIsLiked(response.is_liked);
                 setLikesCount(response.likes_count);
             }
@@ -112,6 +113,7 @@ const ThreadComponent = ({
         try {
             const response = await repostThread(id);
             if (response) {
+                // Force state update to trigger re-render
                 setIsReposted(response.is_reposted);
                 setRepostsCount(response.reposts_count);
 
