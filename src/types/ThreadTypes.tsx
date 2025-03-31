@@ -21,7 +21,7 @@ export interface Thread {
     id: number;
     content: string;
     user: ThreadUser;
-    images: ThreadImage[];
+    thread_images: ThreadImage[];
     created_at: string;
     comments: any[]; // Can be refined if you have comment type details
     likes_count: number;
@@ -39,7 +39,7 @@ export type FollowingFeedResponse = ThreadsListResponse; // Same structure as Th
 // Request type for thread creation
 export interface CreateThreadRequest {
     content: string;
-    images?: string[]; // Optional array of image URLs
+    images?: string[]; // Array of image URLs (after upload)
 }
 
 // Response type for thread creation

@@ -13,7 +13,7 @@ export const useUser = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/users/me`, {
+            const response = await fetch(`${API_URL}/auth/users/me/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export const useUser = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/users/me`, {
+            const response = await fetch(`${API_URL}/auth/users/update_me/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export const useUser = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/users/change-password`, {
+            const response = await fetch(`${API_URL}/auth/users/change_password/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

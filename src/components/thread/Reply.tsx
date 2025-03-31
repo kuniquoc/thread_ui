@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import {
 	FiHeart,
 	FiMessageCircle,
-	FiMoreHorizontal,
+	// FiMoreHorizontal,
 	FiNavigation,
 	FiRepeat,
 } from 'react-icons/fi';
-import BlueCheckmark from '/avatars/blue-checkmark.png';
 import { useReply } from '../../hooks/useReply';
 
 // Define interface for the component props
@@ -33,7 +32,6 @@ const Reply = ({
 	threadId,
 	avatar,
 	username,
-	isVerified,
 	isRepliedTo,
 	repliedToUsername = 'realstoman',
 	content,
@@ -104,15 +102,7 @@ const Reply = ({
 								<p className="text-md sm:text-lg font-medium">
 									{username}
 								</p>
-								{isVerified && (
-									<img
-										src={BlueCheckmark}
-										width={14}
-										height={14}
-										alt="Blue Checkmark"
-										className="rounded-full w-4 sm:w-5"
-									/>
-								)}
+
 							</div>
 							{isRepliedTo && (
 								<div className="flex justify-start items-center gap-2 text-xs mb-1 text-[#666]">
@@ -124,9 +114,9 @@ const Reply = ({
 							<span className="text-xs sm:text-sm text-gray-500">
 								{publishTime}
 							</span>
-							<a href="#">
+							{/* <a href="#">
 								<FiMoreHorizontal className="text-gray-100" />
-							</a>
+							</a> */}
 						</div>
 					</div>
 

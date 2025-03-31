@@ -9,11 +9,11 @@ const Notification = () => {
     const { markAllAsRead } = useNotification();
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const handleMarkAllAsRead = async () => {
-        await markAllAsRead();
-        // Force refresh of notification list by updating the key
-        setRefreshKey(prev => prev + 1);
-    };
+    // const handleMarkAllAsRead = async () => {
+    //     await markAllAsRead();
+    //     // Force refresh of notification list by updating the key
+    //     setRefreshKey(prev => prev + 1);
+    // };
 
     return (
         <PageWrapper>
@@ -24,12 +24,12 @@ const Notification = () => {
                         <h1 className="text-4xl font-semibold mb-3">
                             Notifications
                         </h1>
-                        <button
+                        {/* <button
                             onClick={handleMarkAllAsRead}
                             className="text-sm text-blue-400 hover:text-blue-300"
                         >
                             Mark all as read
-                        </button>
+                        </button> */}
                     </div>
                 </header>
 

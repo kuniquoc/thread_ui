@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserRegistrationRequest, UserLoginRequest, UserResponse, ApiResponse } from '../types';
 import { API_BASE_URL } from '../config/api';
 
@@ -7,6 +8,7 @@ const API_URL = `${API_BASE_URL}/api`;
 export const useAuth = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const register = async (data: UserRegistrationRequest): Promise<ApiResponse<UserResponse> | null> => {
         setLoading(true);
@@ -41,7 +43,6 @@ export const useAuth = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // Important for cookies
                 body: JSON.stringify(data),
             });
 
@@ -49,8 +50,8 @@ export const useAuth = () => {
                 throw new Error('Failed to login');
             }
 
-            // Redirect or handle successful login
-            window.location.href = '/';
+            // Redirect using React Router
+            navigate('/');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to login');
         } finally {
@@ -62,13 +63,10 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include', // Important for cookies
-            });
+            document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
 
-            // Redirect to login page
-            window.location.href = '/login';
+            // Redirect using React Router
+            navigate('/login');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to logout');
         } finally {

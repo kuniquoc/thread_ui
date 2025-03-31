@@ -1,37 +1,45 @@
-import { useState } from 'react';
+import { useState} from 'react';
 import {
     FiHeart,
     FiMessageCircle,
-    FiMoreHorizontal,
-    FiNavigation,
+    // FiMoreHorizontal,
     FiRepeat,
+    FiCheckCircle,
 } from 'react-icons/fi';
-import RonaldoAvatar from '/avatars/ronaldo-avatar.jpg';
-import BlueCheckmark from '/avatars/blue-checkmark.png';
 
 import cn from 'classnames';
-import { Thread } from '../types/ThreadTypes';
-import { useComment } from '../hooks/useComment';
-import { useThread } from '../hooks/useThread';
-import Comment from './profile/Comment';
-import CommentInput from './profile/CommentInput';
+import { Thread } from '../../types/ThreadTypes';
+import { useComment } from '../../hooks/useComment';
+import { useThread } from '../../hooks/useThread';
+import Comment from './Comment';
+import CommentInput from './CommentInput';
 
-// Utility function to format date and time
+// Utility function to format date and time as relative time
 const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    // Format time: HH:MM
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const time = `${hours}:${minutes}`;
+    // Less than a minute
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    }
 
-    // Format date: DD/MM/YYYY
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const formattedDate = `${day}/${month}/${year}`;
+    // Less than an hour
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+        return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
 
-    return `${time} · ${formattedDate}`;
+    // Less than a day
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    }
+
+    // Days
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
 };
 
 // Define the type for the component's props, removing the redundant "comments" prop
@@ -41,7 +49,7 @@ const ThreadComponent = ({
     id,
     content,
     user,
-    images,
+    thread_images,
     created_at,
     likes_count: initialLikesCount,
     is_liked: initialIsLiked,
@@ -55,12 +63,14 @@ const ThreadComponent = ({
     const [loadedComments, setLoadedComments] = useState<any[]>([]);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
 
+    // Add notification state
+    const [showRepostNotification, setShowRepostNotification] = useState(false);
+
     // State for tracking likes and reposts
     const [likesCount, setLikesCount] = useState(initialLikesCount);
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [repostsCount, setRepostsCount] = useState(initialRepostsCount);
     const [isReposted, setIsReposted] = useState(initialIsReposted);
-
     // Format the created_at string
     const formattedDateTime = formatDateTime(created_at);
 
@@ -104,6 +114,15 @@ const ThreadComponent = ({
             if (response) {
                 setIsReposted(response.is_reposted);
                 setRepostsCount(response.reposts_count);
+
+                // Show notification when repost is successful
+                if (response.is_reposted) {
+                    setShowRepostNotification(true);
+                    // Hide notification after 3 seconds
+                    setTimeout(() => {
+                        setShowRepostNotification(false);
+                    }, 3000);
+                }
             }
         } catch (error) {
             console.error('Failed to repost thread', error);
@@ -135,7 +154,15 @@ const ThreadComponent = ({
     };
 
     return (
-        <div className="px-4 my-4 w-200 font-sans">
+        <div className="px-4 my-4 w-200 font-sans relative">
+            {/* Repost notification */}
+            {showRepostNotification && (
+                <div className="absolute top-0 right-0 bg-green-500 text-white px-3 py-2 rounded-md shadow-md flex items-center gap-2 animate-fade-in-out">
+                    <FiCheckCircle />
+                    <span>Reposted successfully!</span>
+                </div>
+            )}
+
             {isReposted ? (
                 <div className="flex justify-start items-center gap-2 ml-4 text-xs mb-1 text-[#777]">
                     <FiRepeat className="-rotate-12 sm:text-xl" />
@@ -162,19 +189,6 @@ const ThreadComponent = ({
                                 className="rounded-full"
                             />
                         </div>
-                        {comment_count > 0 ? (
-                            <div className="flex flex-col justify-center items-center">
-                                <img
-                                    src={RonaldoAvatar}
-                                    width={14}
-                                    height={14}
-                                    alt="Account Avatar"
-                                    className="rounded-full"
-                                />
-                            </div>
-                        ) : (
-                            ''
-                        )}
                     </div>
                 </div>
                 <div className="flex flex-col w-full">
@@ -183,26 +197,14 @@ const ThreadComponent = ({
                             <p className="text-md sm:text-lg font-medium">
                                 {user.username}
                             </p>
-                            {/* Assuming we'd have isVerified in user, using a placeholder for now */}
-                            {user.username.includes('verified') ? (
-                                <img
-                                    src={BlueCheckmark}
-                                    width={14}
-                                    height={14}
-                                    alt="Blue Checkmark"
-                                    className="rounded-full w-4 sm:w-5"
-                                />
-                            ) : (
-                                ''
-                            )}
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="text-xs sm:text-sm text-gray-500">
                                 {formattedDateTime}
                             </span>
-                            <a href="#">
+                            {/* <a href="#">
                                 <FiMoreHorizontal className="text-gray-100" />
-                            </a>
+                            </a> */}
                         </div>
                     </div>
 
@@ -213,18 +215,19 @@ const ThreadComponent = ({
                             </p>
                             {/* Assuming mentions would be part of content in this model */}
                             <div className="mt-2">
-                                {images && images.length > 0 && (
-                                    <div className="image-carousel">
-                                        {images.map((img) => (
+                                {thread_images && thread_images.length > 0 ? (
+                                    <div className="flex flex-row gap-2 overflow-x-auto py-2">
+                                        {thread_images.map((img) => (
                                             <img
                                                 key={img.id}
                                                 src={img.image}
                                                 alt="Thread image"
-                                                className="rounded-md mt-2"
+                                                className="rounded-md max-h-72 object-cover"
+                                                style={{ maxWidth: '280px' }}
                                             />
                                         ))}
                                     </div>
-                                )}
+                                ) : null}
                             </div>
                         </div>
 
@@ -250,9 +253,6 @@ const ThreadComponent = ({
                                     }
                                 />
                             </button>
-                            <button type="button">
-                                <FiNavigation className="text-gray-100 sm:text-xl" />
-                            </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
                             {comment_count > 0 ? (
@@ -263,8 +263,10 @@ const ThreadComponent = ({
                                     {showComments ? "Hide replies" : `${comment_count} replies`}
                                 </button>
                             ) : ''}
-                            {comment_count > 0 && likesCount > 0 ? <span>.</span> : ''}
+                            {comment_count > 0 && (likesCount > 0 || repostsCount > 0) ? <span>.</span> : ''}
                             {likesCount > 0 ? <p>{likesCount} likes</p> : ''}
+                            {likesCount > 0 && repostsCount > 0 ? <span>.</span> : ''}
+                            {repostsCount > 0 ? <p>{repostsCount} reposts</p> : ''}
                         </div>
 
                         {/* Comment input section - replaced with CommentInput component */}

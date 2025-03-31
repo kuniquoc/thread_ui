@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
     FiHeart,
     FiMessageCircle,
-    FiMoreHorizontal,
+    // FiMoreHorizontal,
     FiNavigation,
     FiRepeat,
 } from 'react-icons/fi';
@@ -174,9 +174,9 @@ const Comment = ({
                             <span className="text-xs sm:text-sm text-gray-500">
                                 {publishTime}
                             </span>
-                            <a href="#">
+                            {/* <a href="#">
                                 <FiMoreHorizontal className="text-gray-100" />
-                            </a>
+                            </a> */}
                         </div>
                     </div>
 

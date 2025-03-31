@@ -17,22 +17,30 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useThread } from '../hooks/useThread';
+import { CreateThreadRequest } from '../types';
 
-// Replace Next.js Image with regular img
-const StomanAvatar = '/avatars/stoman-avatar.jpg';
 
 const Navigation = () => {
 	const [openModal, setOpenModal] = useState<string | undefined>();
 	const props = { openModal, setOpenModal };
 	const [activeTab, setActiveTab] = useState('Home');
 	const { logout } = useAuth();
-	const { user } = useUser();
-	const { createThread, loading, error } = useThread();
+	const { user, getCurrentUser } = useUser();
+	const { createThread, uploadImages, loading, error } = useThread();
 	const navigate = useNavigate();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 	const [threadContent, setThreadContent] = useState('');
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [isUploading, setIsUploading] = useState(false);
+
+	// Get current user info
+	useEffect(() => {
+		const fetchUser = async () => {
+			await getCurrentUser();
+		};
+		fetchUser();
+	}, [])
 
 	// Reset error message when modal closes or operation completes
 	useEffect(() => {
@@ -50,7 +58,6 @@ const Navigation = () => {
 
 	const handleLogout = async () => {
 		await logout();
-		// Redirect to login page after logout
 		navigate('/login');
 	};
 
@@ -63,7 +70,7 @@ const Navigation = () => {
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files.length > 0) {
 			const newFiles = Array.from(event.target.files).filter(file =>
-				file.type.startsWith('image/') || file.type.startsWith('video/')
+				file.type.startsWith('image/')
 			);
 			setSelectedFiles(prev => [...prev, ...newFiles]);
 		}
@@ -87,24 +94,44 @@ const Navigation = () => {
 
 			setErrorMessage(null);
 
-			const thread = {
+			// Handle image uploads first if there are any
+			let imageUrls: string[] = [];
+			if (selectedFiles.length > 0) {
+				setIsUploading(true);
+				// Upload images to ImgBB
+				imageUrls = await uploadImages(selectedFiles);
+				setIsUploading(false);
+
+				if (imageUrls.length === 0) {
+					setErrorMessage('All image uploads failed. Please check your ImgBB API key configuration.');
+					return;
+				}
+
+				if (imageUrls.length < selectedFiles.length) {
+					setErrorMessage('Some images failed to upload. You can try again or proceed with the successful ones.');
+				}
+			}
+
+			const threadData: CreateThreadRequest = {
 				content: threadContent,
-				media: selectedFiles,
-				isDraft: !publish,
+				// Only include images if we have any URLs
+				...(imageUrls.length > 0 && { images: imageUrls })
 			};
 
-			const result = await createThread(thread);
+			const result = await createThread(threadData);
 
 			if (result) {
 				// Reset the form
 				setThreadContent('');
 				setSelectedFiles([]);
 
-				// Only close the modal if actually posting (not saving draft)
-				if (publish) {
-					props.setOpenModal(undefined);
-				} else {
-					setErrorMessage('Thread saved as draft');
+				// Close the modal after successful thread creation regardless of publish status
+				props.setOpenModal(undefined);
+
+				// If not publishing (saving as draft), show a success message
+				if (!publish) {
+					// Show toast or success message for drafts here if needed
+					// Since modal is closed, we don't need to set error message for draft success
 				}
 			}
 		} catch (err) {
@@ -231,7 +258,7 @@ const Navigation = () => {
 													<div className="flex -ml-7 flex-col w-14 h-28 max-h-28 justify-between items-center">
 														<div>
 															<img
-																src={user?.avatar || StomanAvatar}
+																src={user?.avatar}
 																width={35}
 																height={35}
 																alt="Account Avatar"
@@ -245,7 +272,7 @@ const Navigation = () => {
 												<div className="space-y-6 w-full">
 													<div className="flex flex-col items-start">
 														<p className="text-xs text-[#666]">
-															@{user?.username || 'username'}
+															@{user?.username}
 														</p>
 													</div>
 													<div className="w-full">
@@ -340,11 +367,11 @@ const Navigation = () => {
 													saveThread(true);
 												}}
 												type="button"
-												disabled={loading}
+												disabled={loading || isUploading}
 												className="text-left col-span-1 rounded-lg inline-flex justify-center items-center text-blue-400 text-sm font-medium disabled:text-opacity-50 disabled:cursor-not-allowed"
 												data-modal-hide="create-post-modal"
 											>
-												{loading ? 'Posting...' : 'Post'}
+												{isUploading ? 'Uploading images...' : loading ? 'Posting...' : 'Post'}
 												<span className="sr-only">
 													Post
 												</span>

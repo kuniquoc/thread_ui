@@ -1,4 +1,4 @@
-import ThreadComponent from '../components/Thread';
+import ThreadComponent from '../components/thread/Thread';
 import PageWrapper from '../components/PageWrapper';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -65,9 +65,8 @@ const Home = () => {
                                 id={thread.id}
                                 content={thread.content}
                                 user={thread.user}
-                                images={thread.images}
+                                thread_images={thread.thread_images}
                                 created_at={thread.created_at}
-                                comments={thread.comments}
                                 likes_count={thread.likes_count}
                                 is_liked={thread.is_liked}
                                 reposts_count={thread.reposts_count}
