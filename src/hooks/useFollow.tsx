@@ -6,6 +6,7 @@ import {
     FollowersCountResponse
 } from '../types/FollowTypes';
 import { API_BASE_URL } from '../config/api';
+import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -13,16 +14,24 @@ export const useFollow = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [follows, setFollows] = useState<Follow[]>([]);
+    const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     // Get following list
     const getFollowingList = async (page: number = 1): Promise<FollowsResponse | null> => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/follows/?page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -45,10 +54,17 @@ export const useFollow = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/follows/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
                 body: JSON.stringify(data),
@@ -71,10 +87,17 @@ export const useFollow = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/follows/followers_count/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });

@@ -8,6 +8,7 @@ import {
     GetNotificationsParams
 } from '../types/NotificationTypes';
 import { API_BASE_URL } from '../config/api';
+import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -15,11 +16,18 @@ export const useNotification = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     const getNotifications = async (params?: GetNotificationsParams): Promise<NotificationsResponse | null> => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             // Build query params
             const queryParams = new URLSearchParams();
             if (params?.page) queryParams.append('page', params.page.toString());
@@ -31,6 +39,7 @@ export const useNotification = () => {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -54,10 +63,17 @@ export const useNotification = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/notifications/unread_count/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -80,10 +96,17 @@ export const useNotification = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/notifications/${notificationId}/mark_read/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -106,10 +129,17 @@ export const useNotification = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/notifications/mark_all_read/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });

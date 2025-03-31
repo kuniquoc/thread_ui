@@ -10,6 +10,7 @@ import {
     RepostCommentResponse
 } from '../types/CommentTypes';
 import { API_BASE_URL } from '../config/api';
+import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -17,16 +18,24 @@ export const useComment = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
+    const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     // Get comments for a thread
     const getComments = async (threadId: number, page: number = 1): Promise<CommentsResponse | null> => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/threads/${threadId}/comments/?page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -49,10 +58,17 @@ export const useComment = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/threads/${threadId}/comments/${commentId}/replies/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -74,10 +90,17 @@ export const useComment = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/threads/${threadId}/comments/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
                 body: JSON.stringify(data),
@@ -103,10 +126,17 @@ export const useComment = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/threads/${threadId}/comments/${commentId}/like/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -128,10 +158,17 @@ export const useComment = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/threads/${threadId}/comments/${commentId}/repost/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });

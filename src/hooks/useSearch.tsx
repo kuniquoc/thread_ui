@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UserResponse, PaginatedResponse } from '../types';
 import { API_BASE_URL } from '../config/api';
+import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -13,15 +14,23 @@ export const useSearch = () => {
         next: string | null;
         previous: string | null;
     } | null>(null);
+    const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     const searchUsers = async (query: string, page: number = 1): Promise<PaginatedResponse<UserResponse> | null> => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(`${API_URL}/users/?search=${encodeURIComponent(query)}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
@@ -48,10 +57,17 @@ export const useSearch = () => {
         setLoading(true);
         setError(null);
         try {
+            // Ensure we have a CSRF token
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
                 },
                 credentials: 'include',
             });
