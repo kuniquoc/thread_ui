@@ -15,7 +15,7 @@ export const ProtectedRoute = () => {
         };
 
         checkAuth();
-    }, [getCurrentUser]);
+    }, []);
 
     if (isLoading) {
         // You can return a loading spinner or placeholder here
