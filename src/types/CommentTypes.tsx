@@ -5,6 +5,7 @@ export interface CommentUser {
     last_name: string;
     email: string;
     avatar: string | null;
+    date_joined: string;
 }
 
 export interface Comment {
@@ -15,8 +16,8 @@ export interface Comment {
     likes_count: number;
     is_liked: boolean;
     replies_count: number;
-    reposts_count?: number;
-    is_reposted?: boolean;
+    reposts_count: number;
+    is_reposted: boolean;
 }
 
 export interface CommentsResponse {

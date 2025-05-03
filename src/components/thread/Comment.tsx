@@ -11,6 +11,7 @@ import BlueCheckmark from '/avatars/blue-checkmark.png';
 import Reply from './Reply';
 import { useComment } from '../../hooks/useComment';
 import CommentInput from './CommentInput';
+import { formatDateTime } from '../../utils/dateUtils';
 
 // Define interface for the component props
 interface CommentProps {
@@ -53,7 +54,7 @@ const Comment = ({
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
     const [showReplyForm, setShowReplyForm] = useState(false);
 
-    const { likeComment, getReplies, createComment } = useComment();
+    const { likeComment, getReplies, createComment, repostComment } = useComment();
 
     const handleLike = async () => {
         try {
@@ -71,9 +72,16 @@ const Comment = ({
         setShowReplyForm(!showReplyForm);
     };
 
-    const handleRepost = () => {
-        // Logic for reposting
-        console.log('Repost comment', id);
+    const handleRepost = async () => {
+        try {
+            const response = await repostComment(threadId, id);
+            if (response) {
+                // Handle repost success
+                console.log('Comment reposted successfully');
+            }
+        } catch (error) {
+            console.error('Failed to repost comment', error);
+        }
     };
 
     const handleShare = () => {
@@ -172,7 +180,7 @@ const Comment = ({
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="text-xs sm:text-sm text-gray-500">
-                                {publishTime}
+                                {formatDateTime(publishTime)}
                             </span>
                             {/* <a href="#">
                                 <FiMoreHorizontal className="text-gray-100" />

@@ -12,6 +12,16 @@ export const useUser = () => {
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     const getCurrentUser = async (): Promise<UserResponse | null> => {
+        // Check if the user is already set in the state
+        const localUser = localStorage.getItem('user');
+        if (localUser) {
+            const parsedUser = JSON.parse(localUser);
+            setUser(parsedUser);
+            return parsedUser;
+        }
+        
+        // If not, fetch the user info from the server
+        // and set it in the state
         setLoading(true);
         setError(null);
         try {
@@ -34,6 +44,10 @@ export const useUser = () => {
                 throw new Error(result.message || 'Failed to get user info');
             }
             setUser(result.data);
+
+            // Optionally, you can set the user in local storage or context
+            localStorage.setItem('user', JSON.stringify(result.data));
+
             return result.data;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to get user info');

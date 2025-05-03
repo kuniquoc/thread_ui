@@ -17,7 +17,7 @@ const Notification = () => {
         <PageWrapper>
             <div className="pt-5 pb-16 flex flex-col items-center overflow-y-auto">
                 {/* Header section */}
-                <header className="mb-3 w-full scroll-mb-2">
+                <header className="mb-3 w-200 scroll-mb-2">
                     <div className="px-4 flex justify-between items-center">
                         <h1 className="text-4xl font-semibold mb-3">
                             Notifications

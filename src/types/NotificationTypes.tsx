@@ -7,6 +7,7 @@ export interface User {
     last_name: string;
     email: string;
     avatar: string;
+    date_joined: string;
 }
 
 export interface Notification {

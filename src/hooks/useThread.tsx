@@ -1,20 +1,19 @@
 import { useState } from 'react';
-
 import {
     Thread,
     ThreadsListResponse,
-    ThreadFeedResponse,
-    FollowingFeedResponse,
     CreateThreadRequest,
-    CreateThreadResponse,
+    CreateCommentRequest,
     LikeThreadResponse,
-    RepostThreadResponse
+    RepostThreadResponse,
+    Comment,
+    CommentListResponse,
+    LikeCommentResponse
 } from '../types';
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
-// Get ImgBB API key from environment variables
 const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 
 export const useThread = () => {
@@ -33,7 +32,7 @@ export const useThread = () => {
             const formData = new FormData();
             formData.append('image', file);
             formData.append('key', IMGBB_API_KEY);
-
+            
             const response = await fetch('https://api.imgbb.com/1/upload', {
                 method: 'POST',
                 body: formData,
@@ -82,7 +81,7 @@ export const useThread = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to fetch threads');
+                throw new Error(result.detail || 'Failed to fetch threads');
             }
             setThreads(result.results);
             return result;
@@ -95,7 +94,7 @@ export const useThread = () => {
     };
 
     // Get thread feed
-    const getThreadFeed = async (page: number = 1): Promise<ThreadFeedResponse | null> => {
+    const getThreadFeed = async (page: number = 1): Promise<ThreadsListResponse | null> => {
         setLoading(true);
         setError(null);
         try {
@@ -108,7 +107,7 @@ export const useThread = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to fetch thread feed');
+                throw new Error(result.detail || 'Failed to fetch thread feed');
             }
             setThreads(result.results);
             return result;
@@ -121,7 +120,7 @@ export const useThread = () => {
     };
 
     // Get following feed
-    const getFollowingFeed = async (page: number = 1): Promise<FollowingFeedResponse | null> => {
+    const getFollowingFeed = async (page: number = 1): Promise<ThreadsListResponse | null> => {
         setLoading(true);
         setError(null);
         try {
@@ -134,7 +133,7 @@ export const useThread = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to fetch following feed');
+                throw new Error(result.detail || 'Failed to fetch following feed');
             }
             setThreads(result.results);
             return result;
@@ -146,12 +145,86 @@ export const useThread = () => {
         }
     };
 
-    // Create a new thread
-    const createThread = async (data: CreateThreadRequest): Promise<CreateThreadResponse | null> => {
+    // Get user threads
+    const getUserThreads = async (page: number = 1): Promise<ThreadsListResponse | null> => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
+            const response = await fetch(`${API_URL}/threads/my_threads/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || 'Failed to fetch user threads');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch user threads');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get commented threads
+    const getCommentedThreads = async (page: number = 1): Promise<ThreadsListResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/threads/my_commented_threads/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || 'Failed to fetch commented threads');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch commented threads');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get reposted threads
+    const getRepostedThreads = async (page: number = 1): Promise<ThreadsListResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/threads/my_reposted_threads/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || 'Failed to fetch reposted threads');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch reposted threads');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Create a new thread
+    const createThread = async (data: CreateThreadRequest): Promise<Thread | null> => {
+        setLoading(true);
+        setError(null);
+        try {
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -171,11 +244,71 @@ export const useThread = () => {
                 if (result.errors?.content) {
                     throw new Error(result.errors.content);
                 }
-                throw new Error(result.message || 'Failed to create thread');
+                throw new Error(result.detail || 'Failed to create thread');
             }
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create thread');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get thread comments
+    const getThreadComments = async (threadId: number, page: number = 1): Promise<CommentListResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${API_URL}/threads/${threadId}/comments/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || 'Failed to fetch comments');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch comments');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Create a comment
+    const createComment = async (threadId: number, data: CreateCommentRequest): Promise<Comment | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/threads/${threadId}/comments/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                if (result.errors?.content) {
+                    throw new Error(result.errors.content);
+                }
+                throw new Error(result.detail || 'Failed to create comment');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create comment');
             return null;
         } finally {
             setLoading(false);
@@ -187,7 +320,6 @@ export const useThread = () => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -203,7 +335,7 @@ export const useThread = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to like/unlike thread');
+                throw new Error(result.detail || 'Failed to like/unlike thread');
             }
             return result;
         } catch (err) {
@@ -219,7 +351,6 @@ export const useThread = () => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -235,11 +366,42 @@ export const useThread = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to repost/unrepost thread');
+                throw new Error(result.detail || 'Failed to repost/unrepost thread');
             }
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to repost/unrepost thread');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Like/Unlike comment
+    const likeComment = async (threadId: number, commentId: number): Promise<LikeCommentResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/threads/${threadId}/comments/${commentId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || 'Failed to like/unlike comment');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to like/unlike comment');
             return null;
         } finally {
             setLoading(false);
@@ -253,9 +415,15 @@ export const useThread = () => {
         getAllThreads,
         getThreadFeed,
         getFollowingFeed,
+        getUserThreads,
+        getCommentedThreads,
+        getRepostedThreads,
         createThread,
+        getThreadComments,
+        createComment,
         likeThread,
         repostThread,
-        uploadImages, // Export the new function
+        likeComment,
+        uploadImages,
     };
 };

@@ -13,36 +13,9 @@ import { useComment } from '../../hooks/useComment';
 import { useThread } from '../../hooks/useThread';
 import Comment from './Comment';
 import CommentInput from './CommentInput';
+import { formatDateTime } from '../../utils/dateUtils';
 
-// Utility function to format date and time as relative time
-const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    // Less than a minute
-    if (diffInSeconds < 60) {
-        return 'Just now';
-    }
-
-    // Less than an hour
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-        return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    // Less than a day
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-    }
-
-    // Days
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-};
-
-// Define the type for the component's props, removing the redundant "comments" prop
+// Define the type for the component's props
 type ThreadComponentProps = Omit<Thread, 'comments'>;
 
 const ThreadComponent = ({
@@ -184,7 +157,7 @@ const ThreadComponent = ({
                     <div className="flex -ml-7 flex-col w-14 h-full justify-between items-center shrink-0 absolute">
                         <div>
                             <img
-                                src={user.avatar}
+                                src={user.avatar || ''}
                                 width={35}
                                 height={35}
                                 alt="Account Avatar"
@@ -274,7 +247,7 @@ const ThreadComponent = ({
                         {/* Comment input section - replaced with CommentInput component */}
                         {showCommentInput && (
                             <CommentInput
-                                avatar={user.avatar}
+                                avatar={user.avatar || ''}
                                 onSubmit={handleCommentSubmit}
                                 placeholder="Post your reply"
                             />

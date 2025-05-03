@@ -7,7 +7,9 @@ import {
 	FiNavigation,
 	FiRepeat,
 } from 'react-icons/fi';
-import { useReply } from '../../hooks/useReply';
+// import { useReply } from '../../hooks/useReply';
+import { useComment } from '../../hooks/useComment';
+import { formatDateTime } from '../../utils/dateUtils';
 
 // Define interface for the component props
 interface ReplyProps {
@@ -44,11 +46,12 @@ const Reply = ({
 }: ReplyProps) => {
 	const [isLiked, setIsLiked] = useState(initialIsLiked);
 	const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
-	const { likeReply } = useReply();
+	// const { likeReply } = useReply();
+	const { likeComment, repostComment } = useComment();
 
 	const handleLike = async () => {
 		try {
-			const response = await likeReply(threadId, id);
+			const response = await likeComment(threadId, id);
 			if (response) {
 				setIsLiked(response.is_liked);
 				setTotalLikes(response.likes_count);
@@ -63,9 +66,16 @@ const Reply = ({
 		console.log('Reply to reply', id);
 	};
 
-	const handleRepost = () => {
-		// Logic for reposting
-		console.log('Repost reply', id);
+	const handleRepost = async () => {
+		try {
+			const response = await repostComment(threadId, id);
+			if (response) {
+				// Handle repost success
+				console.log('Reply reposted successfully');
+			}
+		} catch (error) {
+			console.error('Failed to repost reply', error);
+		}
 	};
 
 	const handleShare = () => {
@@ -112,7 +122,7 @@ const Reply = ({
 						</div>
 						<div className="flex items-center gap-3">
 							<span className="text-xs sm:text-sm text-gray-500">
-								{publishTime}
+									{formatDateTime(publishTime)}
 							</span>
 							{/* <a href="#">
 								<FiMoreHorizontal className="text-gray-100" />

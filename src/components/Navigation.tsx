@@ -166,7 +166,7 @@ const Navigation = () => {
 						props.setOpenModal('default')
 						setActiveTab('Create')
 					}}
-					type="button"
+					type="button" 
 					data-modal-target="create-post-modal"
 					data-modal-toggle="create-post-modal"
 					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
