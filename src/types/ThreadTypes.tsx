@@ -47,29 +47,22 @@ export interface RepostThreadResponse {
     is_reposted: boolean;
 }
 
-export interface Comment {
-    id: number;
-    content: string;
-    user: Thread['user'];
-    created_at: string;
-    likes_count: number;
-    is_liked: boolean;
-    replies_count: number;
-}
+// export interface Comment {
+//     id: number;
+//     content: string;
+//     user: Thread['user'];
+//     created_at: string;
+//     likes_count: number;
+//     is_liked: boolean;
+//     replies_count: number;
+// }
 
-export interface CommentListResponse {
-    count: number;
-    next: string | null;
-    previous: string | null;
-    results: Comment[];
-}
+// export interface CreateCommentRequest {
+//     content: string;
+//     parent_comment_id?: number | null;
+// }
 
-export interface CreateCommentRequest {
-    content: string;
-    parent_comment_id?: number | null;
-}
-
-export interface LikeCommentResponse {
-    likes_count: number;
-    is_liked: boolean;
-}
+// export interface LikeCommentResponse {
+//     likes_count: number;
+//     is_liked: boolean;
+//}

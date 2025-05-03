@@ -47,3 +47,10 @@ export interface RepostCommentResponse {
     reposts_count: number;
     is_reposted: boolean;
 }
+
+export interface CommentListResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: Comment[];
+}
