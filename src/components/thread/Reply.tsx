@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
 	FiHeart,
@@ -10,6 +10,7 @@ import {
 // import { useReply } from '../../hooks/useReply';
 import { useComment } from '../../hooks/useComment';
 import { formatDateTime } from '../../utils/dateUtils';
+import { usePusher } from '../../hooks/usePusher';
 
 // Define interface for the component props
 interface ReplyProps {
@@ -48,6 +49,17 @@ const Reply = ({
 	const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
 	// const { likeReply } = useReply();
 	const { likeComment, repostComment } = useComment();
+
+	const handlePusherEvent = useCallback((eventData: any) => {
+		const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+
+		if (data.type === 'new_comment' && data.comment_id === id) {
+			setTotalLikes(data.likes_count);
+		}
+	}, [id]);
+
+	// Subscribe to Pusher channel for this thread
+	usePusher(`thread_${threadId}`, handlePusherEvent);
 
 	const handleLike = async () => {
 		try {

@@ -1,4 +1,3 @@
-import { Tabs, TabItem } from 'flowbite-react';
 import ThreadComponent from '../thread/Thread';
 import { Thread } from '../../types';
 
@@ -9,52 +8,39 @@ interface ProfileThreadsProps {
 }
 
 const ProfileThreads = ({ threads, activeFilter, setActiveFilter }: ProfileThreadsProps) => {
+    const tabs = [
+        { id: 'my', title: 'My Threads' },
+        { id: 'replies', title: 'Replies' },
+        { id: 'reposts', title: 'Reposts' }
+    ];
+
     return (
         <div className="border-t border-[#333] mt-4">
-            <Tabs 
-                className="border-b border-[#333]"
-                onActiveTabChange={(tabIndex) => {
-                    const filters = ['my', 'replies', 'reposts'];
-                    setActiveFilter(filters[tabIndex]);
-                }}
-            >
-                <TabItem 
-                    active={activeFilter === 'my'} 
-                    onClick={() => setActiveFilter('my')} 
-                    title="Threads"
-                >  
-                    {threads.map(thread => (
-                        <ThreadComponent
-                            key={thread.id}
-                            {...thread}
-                        />
+            <div className="border-b border-[#333]">
+                <div className="flex">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveFilter(tab.id)}
+                            className={`px-4 py-2 font-medium text-sm ${
+                                activeFilter === tab.id
+                                    ? 'text-white border-b-2 border-white'
+                                    : 'text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            {tab.title}
+                        </button>
                     ))}
-                </TabItem>
-                <TabItem 
-                    active={activeFilter === 'replies'} 
-                    onClick={() => setActiveFilter('replies')} 
-                    title="Replies"
-                >
-                    {threads.map(thread => (
-                        <ThreadComponent
-                            key={thread.id}
-                            {...thread}
-                        />
-                    ))}
-                </TabItem>
-                <TabItem 
-                    active={activeFilter === 'reposts'} 
-                    onClick={() => setActiveFilter('reposts')} 
-                    title="Reposts"
-                >
-                    {threads.map(thread => (
-                        <ThreadComponent
-                            key={thread.id}
-                            {...thread}
-                        />
-                    ))}
-                </TabItem>
-            </Tabs>
+                </div>
+            </div>
+            <div className="mt-4">
+                {threads.map(thread => (
+                    <ThreadComponent
+                        key={thread.id}
+                        {...thread}
+                    />
+                ))}
+            </div>
         </div>
     );
 };

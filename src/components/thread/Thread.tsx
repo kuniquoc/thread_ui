@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
     FiHeart,
     FiMessageCircle,
-    // FiMoreHorizontal,
     FiRepeat,
     FiCheckCircle,
 } from 'react-icons/fi';
@@ -11,6 +10,7 @@ import cn from 'classnames';
 import { Thread } from '../../types/ThreadTypes';
 import { useComment } from '../../hooks/useComment';
 import { useThread } from '../../hooks/useThread';
+import { usePusher } from '../../hooks/usePusher';
 import Comment from './Comment';
 import CommentInput from './CommentInput';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -28,13 +28,14 @@ const ThreadComponent = ({
     is_liked: initialIsLiked,
     reposts_count: initialRepostsCount,
     is_reposted: initialIsReposted,
-    comment_count,
+    comment_count: initialCommentCount,
 }: ThreadComponentProps) => {
     // State for handling UI interactions
     const [showComments, setShowComments] = useState(false);
     const [showCommentInput, setShowCommentInput] = useState(false);
     const [loadedComments, setLoadedComments] = useState<any[]>([]);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [commentCount, setCommentCount] = useState(initialCommentCount);
 
     // Add notification state
     const [showRepostNotification, setShowRepostNotification] = useState(false);
@@ -128,6 +129,29 @@ const ThreadComponent = ({
         }
     };
 
+    const handlePusherEvent = useCallback((eventData: any) => {
+        const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+        
+        if (data.type === 'new_comment') {
+            // Update comment count
+            setCommentCount(data.comment_count);
+
+            // If comments are currently shown, fetch new comment
+            if (showComments) {
+                getComments(id).then(response => {
+                    if (response) {
+                        setLoadedComments(response.results);
+                    }
+                }).catch(error => {
+                    console.error('Failed to refresh comments after websocket event', error);
+                });
+            }
+        }
+    }, [id, showComments, getComments]);
+
+    // Subscribe to Pusher channel for this thread
+    usePusher(`thread_${id}`, handlePusherEvent);
+
     return (
         <div className="px-4 my-4 w-200 font-sans relative">
             {/* Repost notification */}
@@ -149,7 +173,7 @@ const ThreadComponent = ({
             <div className="flex justify-start gap-8">
                 <div
                     className={cn(
-                        comment_count > 0
+                        commentCount > 0
                             ? 'relative border-l-2 border-[#333] border-opacity-70 ml-2'
                             : 'relative ml-2.5'
                     )}
@@ -230,15 +254,15 @@ const ThreadComponent = ({
                             </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
-                            {comment_count > 0 ? (
+                            {commentCount > 0 ? (
                                 <button
                                     className="text-blue-400 hover:underline"
                                     onClick={handleCommentClick}
                                 >
-                                    {showComments ? "Hide replies" : `${comment_count} replies`}
+                                    {showComments ? "Hide replies" : `${commentCount} replies`}
                                 </button>
                             ) : ''}
-                            {comment_count > 0 && (likesCount > 0 || repostsCount > 0) ? <span>.</span> : ''}
+                            {commentCount > 0 && (likesCount > 0 || repostsCount > 0) ? <span>.</span> : ''}
                             {likesCount > 0 ? <p>{likesCount} likes</p> : ''}
                             {likesCount > 0 && repostsCount > 0 ? <span>.</span> : ''}
                             {repostsCount > 0 ? <p>{repostsCount} reposts</p> : ''}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
     FiHeart,
@@ -12,6 +12,7 @@ import Reply from './Reply';
 import { useComment } from '../../hooks/useComment';
 import CommentInput from './CommentInput';
 import { formatDateTime } from '../../utils/dateUtils';
+import { usePusher } from '../../hooks/usePusher';
 
 // Define interface for the component props
 interface CommentProps {
@@ -42,7 +43,7 @@ const Comment = ({
     mentions,
     isLiked: initialIsLiked,
     pictures,
-    totalReplies = 0,
+    totalReplies: initialTotalReplies = 0,
     totalLikes: initialTotalLikes,
     isReposted,
     onReplySuccess,
@@ -53,8 +54,32 @@ const Comment = ({
     const [replies, setReplies] = useState<any[]>([]);
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
     const [showReplyForm, setShowReplyForm] = useState(false);
+    const [totalReplies, setTotalReplies] = useState(initialTotalReplies);
 
     const { likeComment, getReplies, createComment, repostComment } = useComment();
+
+    const handlePusherEvent = useCallback((eventData: any) => {
+        const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+        
+        if (data.type === 'new_comment' && data.parent_comment_id === id) {
+            // Update reply count
+            setTotalReplies(data.comment_count);
+            
+            // If replies are currently shown, fetch new replies
+            if (showReplies) {
+                getReplies(threadId, id).then(repliesData => {
+                    if (repliesData) {
+                        setReplies(repliesData);
+                    }
+                }).catch(error => {
+                    console.error('Failed to refresh replies after websocket event', error);
+                });
+            }
+        }
+    }, [id, threadId, showReplies, getReplies]);
+
+    // Subscribe to Pusher channel for this thread
+    usePusher(`thread_${threadId}`, handlePusherEvent);
 
     const handleLike = async () => {
         try {
