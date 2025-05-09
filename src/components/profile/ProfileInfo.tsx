@@ -6,8 +6,8 @@ import {
     FiInstagram,
     FiSettings,
 } from 'react-icons/fi';
-import { Modal, ModalBody } from 'flowbite-react';
 import { User } from '../../types';
+import Modal from '../common/Modal';
 
 interface ProfileInfoProps {
     user: User;
@@ -59,13 +59,10 @@ const ProfileInfo = ({ user }: ProfileInfoProps) => {
             {/* Modal */}
             <Modal
                 show={props.openModal === 'pop-up'}
-                size="sm"
-                popup
-                position="center"
                 onClose={() => props.setOpenModal(undefined)}
-                dismissible
+                className="max-w-sm"
             >
-                <ModalBody className="pt-6 bg-[#000] flex justify-center items-center rounded-md">
+                <div className="pt-6 bg-[#000] flex justify-center items-center rounded-md p-6">
                     <div className="text-center">
                         <FiCoffee className="mx-auto mb-4 h-14 w-14 text-green-500" />
                         <h3 className="mb-5 text-lg font-normal text-gray-200">
@@ -80,7 +77,7 @@ const ProfileInfo = ({ user }: ProfileInfoProps) => {
                             </button>
                         </div>
                     </div>
-                </ModalBody>
+                </div>
             </Modal>
         </>
     );
