@@ -1,38 +1,52 @@
-import Pusher from 'pusher-js';
-import { useEffect } from 'react';
-
-const PUSHER_APP_KEY = '09581ace43aa27b85e17'; // Replace with your Pusher app key
-const PUSHER_CLUSTER = 'ap1'; // Replace with your Pusher cluster
+import { useEffect, useRef } from 'react';
+import { Channel } from 'pusher-js';
+import { usePusherContext } from './usePusherContext';
 
 export const usePusher = (channelName: string, onEvent: (data: any) => void) => {
+    const { subscribe, unsubscribe } = usePusherContext();
+    const channelRef = useRef<Channel | null>(null);
+
     useEffect(() => {
-        const pusher = new Pusher(PUSHER_APP_KEY, {
-            cluster: PUSHER_CLUSTER,
-        });
+        if (!channelName) return;
 
-        const channel = pusher.subscribe(channelName);
-        channel.bind('comment_update', (data: any) => {
-            try {
-                // First parse the outer data if it's a string
-                const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-                
-                // Then parse the inner data field if it exists and is a string
-                const finalData = parsedData.data ? 
-                    (typeof parsedData.data === 'string' ? JSON.parse(parsedData.data) : parsedData.data) 
-                    : parsedData;
-                
-                onEvent(finalData);
-            } catch (error) {
-                console.error('Error parsing Pusher event data:', error);
-                // Still try to pass the original data if parsing fails
-                onEvent(data);
-            }
-        });
+        try {
+            // Subscribe to channel
+            const channel = subscribe(channelName);
+            channelRef.current = channel;
 
+            // Bind event handlers
+            channel.bind('pusher:subscription_succeeded', () => {
+                console.log(`Successfully subscribed to channel: ${channelName}`);
+            });
+
+            channel.bind('pusher:subscription_error', (error: any) => {
+                console.error('Pusher subscription error:', error);
+            });
+
+            channel.bind('comment_update', (data: any) => {
+                try {
+                    const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+                    const finalData = parsedData.data ? 
+                        (typeof parsedData.data === 'string' ? JSON.parse(parsedData.data) : parsedData.data) 
+                        : parsedData;
+                    
+                    onEvent(finalData);
+                } catch (error) {
+                    console.error('Error parsing Pusher event data:', error);
+                    onEvent(data);
+                }
+            });
+        } catch (error) {
+            console.error('Error subscribing to Pusher channel:', error);
+        }
+
+        // Cleanup
         return () => {
-            channel.unbind_all();
-            channel.unsubscribe();
-            pusher.disconnect();
+            if (channelRef.current) {
+                channelRef.current.unbind_all();
+                unsubscribe(channelName);
+                channelRef.current = null;
+            }
         };
-    }, [channelName, onEvent]);
+    }, [channelName, onEvent, subscribe, unsubscribe]);
 };

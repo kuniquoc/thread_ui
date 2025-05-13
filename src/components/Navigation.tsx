@@ -127,6 +127,8 @@ const Navigation = () => {
 				// Close the modal after successful thread creation regardless of publish status
 				props.setOpenModal(undefined);
 
+				window.location.reload();
+
 				// If not publishing (saving as draft), show a success message
 				if (!publish) {
 					// Show toast or success message for drafts here if needed
@@ -145,7 +147,7 @@ const Navigation = () => {
 
 	return (
 		<div className="fixed top-0 left-0 z-40 w-30 h-full">
-			<div className="grid h-full max-w-lg sm:max-w-4xl grid-rows-6 mx-auto font-medium bg-[#111] text-[#666]">
+			<div className="grid h-full max-w-lg sm:max-w-4xl grid-rows-6 mx-auto font-medium bg-[#1a1a1a] text-[#666] border-r border-[#333]">
 				<Link
 					to="/"
 					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
@@ -177,7 +179,7 @@ const Navigation = () => {
 					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
 					onClick={() => setActiveTab('Notification')}
 				>
-					<FiBell className={`text-3xl ${activeTab === 'Activity' && 'fill-white'}`} />
+					<FiBell className={`text-3xl ${activeTab === 'Notification' && 'fill-white'}`} />
 				</Link>
 				<Link
 					to="/profile"

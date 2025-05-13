@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Input from './common/Input';
 
 const Register = () => {
     const { register, loading, error } = useAuth();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -23,7 +24,10 @@ const Register = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await register(formData);
+        const success = await register(formData);
+        if (success) {
+            navigate('/login');
+        }
     };
 
     return (

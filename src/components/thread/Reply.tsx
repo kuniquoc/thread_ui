@@ -1,13 +1,9 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import {
 	FiHeart,
 	FiMessageCircle,
-	// FiMoreHorizontal,
-	FiNavigation,
 	FiRepeat,
 } from 'react-icons/fi';
-// import { useReply } from '../../hooks/useReply';
 import { useComment } from '../../hooks/useComment';
 import { formatDateTime } from '../../utils/dateUtils';
 import { usePusher } from '../../hooks/usePusher';
@@ -23,11 +19,11 @@ interface ReplyProps {
 	repliedToUsername?: string;
 	content: string;
 	publishTime: string;
-	mentions?: string;
 	isLiked: boolean;
 	pictures?: React.ReactNode;
 	totalLikes: number;
 	isReposted?: boolean;
+	onReplyClick?: (username: string) => void;
 }
 
 const Reply = ({
@@ -39,16 +35,15 @@ const Reply = ({
 	repliedToUsername = 'realstoman',
 	content,
 	publishTime,
-	mentions,
 	isLiked: initialIsLiked,
 	pictures,
 	totalLikes: initialTotalLikes,
 	isReposted,
+	onReplyClick,
 }: ReplyProps) => {
 	const [isLiked, setIsLiked] = useState(initialIsLiked);
 	const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
-	// const { likeReply } = useReply();
-	const { likeComment, repostComment } = useComment();
+	const { likeComment } = useComment();
 
 	const handlePusherEvent = useCallback((eventData: any) => {
 		const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
@@ -78,25 +73,9 @@ const Reply = ({
 	};
 
 	const handleReply = () => {
-		// Logic to open reply form for responding to this reply
-		console.log('Reply to reply', id);
-	};
-
-	const handleRepost = async () => {
-		try {
-			const response = await repostComment(threadId, id);
-			if (response) {
-				// Handle repost success
-				console.log('Reply reposted successfully');
-			}
-		} catch (error) {
-			console.error('Failed to repost reply', error);
+		if (onReplyClick) {
+			onReplyClick(username);
 		}
-	};
-
-	const handleShare = () => {
-		// Logic for sharing
-		console.log('Share reply', id);
 	};
 
 	return (
@@ -128,21 +107,17 @@ const Reply = ({
 								<p className="text-md sm:text-lg font-medium">
 									{username}
 								</p>
-
 							</div>
 							{isRepliedTo && (
 								<div className="flex justify-start items-center gap-2 text-xs mb-1 text-[#666]">
-									<span>Replying to @{repliedToUsername}</span>
+									<span>Replying to <span className="text-blue-400">@{repliedToUsername}</span></span>
 								</div>
 							)}
 						</div>
 						<div className="flex items-center gap-3">
 							<span className="text-xs sm:text-sm text-gray-500">
-									{formatDateTime(publishTime)}
+								{formatDateTime(publishTime)}
 							</span>
-							{/* <a href="#">
-								<FiMoreHorizontal className="text-gray-100" />
-							</a> */}
 						</div>
 					</div>
 
@@ -151,37 +126,26 @@ const Reply = ({
 							<p className="text-xs sm:text-sm text-gray-200">
 								{content}
 							</p>
-							{mentions && (
-								<Link to="/" className="text-blue-400">
-									{mentions}
-								</Link>
-							)}
-							<div className="mt-2">{pictures}</div>
 						</div>
+						<div className="mt-2">{pictures}</div>
+					</div>
 
-						<div className="flex gap-4 mt-3 sm:mt-4">
-							<button type="button" onClick={handleLike}>
-								<FiHeart
-									className={
-										isLiked
-											? 'fill-red-600 text-red-600 sm:text-xl'
-											: 'fill-none text-gray-100 sm:text-xl'
-									}
-								/>
-							</button>
-							<button type="button" onClick={handleReply}>
-								<FiMessageCircle className="text-gray-100 -rotate-90 sm:text-xl" />
-							</button>
-							<button type="button" onClick={handleRepost}>
-								<FiRepeat className="text-gray-100  -rotate-12 sm:text-xl" />
-							</button>
-							<button type="button" onClick={handleShare}>
-								<FiNavigation className="text-gray-100 sm:text-xl" />
-							</button>
-						</div>
-						<div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
-							{totalLikes > 0 && <p>{totalLikes} likes</p>}
-						</div>
+					<div className="flex gap-4 mt-3 sm:mt-4">
+						<button type="button" onClick={handleLike}>
+							<FiHeart
+								className={
+									isLiked
+										? 'fill-red-600 text-red-600 sm:text-xl'
+										: 'fill-none text-gray-100 sm:text-xl'
+								}
+							/>
+						</button>
+						<button type="button" onClick={handleReply}>
+							<FiMessageCircle className="text-gray-100 -rotate-90 sm:text-xl" />
+						</button>
+					</div>
+					<div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
+						{totalLikes > 0 && <p>{totalLikes} likes</p>}
 					</div>
 				</div>
 			</div>

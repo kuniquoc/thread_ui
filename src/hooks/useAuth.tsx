@@ -6,6 +6,20 @@ import { useCSRF } from './useCSRF';
 
 const API_URL = `${API_BASE_URL}/api`;
 
+// Helper function to clear all storage (cookies and localStorage)
+const clearAllStorages = () => {
+    // Clear all cookies
+    document.cookie.split(';').forEach(cookie => {
+        const [name] = cookie.split('=');
+        document.cookie = `${name.trim()}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+    });
+    
+    // Clear localStorage
+    localStorage.clear();
+};
+
+const CSRF_TOKEN_KEY = 'csrf_token';
+
 export const useAuth = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -68,6 +82,9 @@ export const useAuth = () => {
                 throw new Error('Failed to login');
             }
 
+            // Remove CSRF token from localStorage after successful login
+            localStorage.removeItem(CSRF_TOKEN_KEY);
+
             // Redirect using React Router
             navigate('/');
         } catch (err) {
@@ -101,14 +118,15 @@ export const useAuth = () => {
                 throw new Error('Failed to logout from server');
             }
 
-            document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+            // Clear all storage
+            clearAllStorages();
 
             // Redirect using React Router
             navigate('/login');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to logout');
-            // Even if server logout fails, clear cookies and redirect
-            document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+            // Even if server logout fails, clear storage and redirect
+            clearAllStorages();
             navigate('/login');
         } finally {
             setLoading(false);

@@ -2,8 +2,6 @@ import { useState } from 'react';
 import {
     FiCheck,
     FiCoffee,
-    FiGlobe,
-    FiInstagram,
     FiSettings,
 } from 'react-icons/fi';
 import { User } from '../../types';
@@ -21,13 +19,7 @@ const ProfileInfo = ({ user }: ProfileInfoProps) => {
         <>
             {/* Links */}
             <div className="flex justify-between items-center mb-5 text-gray-200">
-                <button type="button" onClick={() => props.setOpenModal('pop-up')}>
-                    <FiGlobe className="w-5 h-5" />
-                </button>
                 <div className="flex gap-4">
-                    <button type="button" onClick={() => props.setOpenModal('pop-up')}>
-                        <FiInstagram className="w-5 h-5" />
-                    </button>
                     <button type="button" onClick={() => props.setOpenModal('pop-up')}>
                         <FiSettings className="w-5 h-5" />
                     </button>

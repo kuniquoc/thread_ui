@@ -4,7 +4,6 @@ import {
     FiHeart,
     FiMessageCircle,
     // FiMoreHorizontal,
-    FiNavigation,
     FiRepeat,
 } from 'react-icons/fi';
 import BlueCheckmark from '/avatars/blue-checkmark.png';
@@ -55,8 +54,9 @@ const Comment = ({
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [totalReplies, setTotalReplies] = useState(initialTotalReplies);
+    const [replyToUsername, setReplyToUsername] = useState<string | null>(null);
 
-    const { likeComment, getReplies, createComment, repostComment } = useComment();
+    const { likeComment, getReplies, createComment } = useComment();
 
     const handlePusherEvent = useCallback((eventData: any) => {
         const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
@@ -101,23 +101,6 @@ const Comment = ({
         setShowReplyForm(!showReplyForm);
     };
 
-    const handleRepost = async () => {
-        try {
-            const response = await repostComment(threadId, id);
-            if (response) {
-                // Handle repost success
-                console.log('Comment reposted successfully');
-            }
-        } catch (error) {
-            console.error('Failed to repost comment', error);
-        }
-    };
-
-    const handleShare = () => {
-        // Logic for sharing
-        console.log('Share comment', id);
-    };
-
     const handleToggleReplies = async () => {
         if (!showReplies && replies.length === 0) {
             setIsLoadingReplies(true);
@@ -138,7 +121,7 @@ const Comment = ({
     const handleSubmitReply = async (content: string) => {
         try {
             const response = await createComment(threadId, {
-                content,
+                content: content, // Không thêm @username vì đã được thêm từ CommentInput
                 parent_comment_id: id
             });
 
@@ -165,6 +148,11 @@ const Comment = ({
         } catch (error) {
             console.error('Failed to submit reply', error);
         }
+    };
+
+    const handleReplyToReply = (username: string) => {
+        setReplyToUsername(username);
+        setShowReplyForm(true);
     };
 
     return (
@@ -243,12 +231,6 @@ const Comment = ({
                             <button type="button" onClick={handleReply}>
                                 <FiMessageCircle className="text-gray-100 -rotate-90 sm:text-xl" />
                             </button>
-                            <button type="button" onClick={handleRepost}>
-                                <FiRepeat className="text-gray-100  -rotate-12 sm:text-xl" />
-                            </button>
-                            <button type="button" onClick={handleShare}>
-                                <FiNavigation className="text-gray-100 sm:text-xl" />
-                            </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
                             {totalReplies > 0 && (
@@ -262,14 +244,6 @@ const Comment = ({
                             {totalReplies > 0 && totalLikes > 0 && <span>.</span>}
                             {totalLikes > 0 && <p>{totalLikes} likes</p>}
                         </div>
-
-                        {showReplyForm && (
-                            <CommentInput
-                                avatar={avatar}
-                                onSubmit={(content) => handleSubmitReply(content)}
-                                placeholder="Post your reply"
-                            />
-                        )}
                     </div>
                 </div>
             </div>
@@ -289,9 +263,24 @@ const Comment = ({
                             content={reply.content}
                             publishTime={reply.created_at}
                             isLiked={reply.is_liked}
+                            pictures={reply.pictures}
                             totalLikes={reply.likes_count}
+                            isReposted={reply.is_reposted}
+                            onReplyClick={handleReplyToReply}
                         />
                     ))}
+                </div>
+            )}
+
+            {showReplyForm && (
+                <div className="ml-16 mt-4">
+                    <CommentInput
+                        avatar={avatar}
+                        onSubmit={(content) => handleSubmitReply(content)}
+                        placeholder="Post your reply"
+                        initialMention={replyToUsername || username}
+                        autoFocus={true}
+                    />
                 </div>
             )}
         </div>

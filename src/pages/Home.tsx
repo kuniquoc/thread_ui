@@ -39,64 +39,75 @@ const Home = () => {
     };
 
     if (loading && page === 1) return (
-        <PageWrapper>
-            <div className="pt-5 pb-16 flex flex-col items-center">
-                <div className="text-center p-4">Loading threads...</div>
-            </div>
-        </PageWrapper>
+        <div className="min-h-screen flex flex-col items-center">
+            <h1 className="text-2xl font-bold p-4 bg-[#111111] w-full text-center sticky top-0 z-10">Trang chủ</h1>
+            <PageWrapper>
+                <div className="pt-5 pb-16">
+                    <div className="text-center p-4">Loading threads...</div>
+                </div>
+            </PageWrapper>
+        </div>
     );
 
     if (error) return (
-        <PageWrapper>
-            <div className="pt-5 pb-16 flex flex-col items-center">
-                <div className="text-center p-4 text-red-500">Error: {error}</div>
-            </div>
-        </PageWrapper>
+        <div className="min-h-screen flex flex-col items-center">
+            <h1 className="text-2xl font-bold p-4 bg-[#111111] w-full text-center sticky top-0 z-10">Trang chủ</h1>
+            <PageWrapper>
+                <div className="pt-5 pb-16">
+                    <div className="text-center p-4 text-red-500">Error: {error}</div>
+                </div>
+            </PageWrapper>
+        </div>
     );
 
     return (
-        <PageWrapper>
-            <div className="pt-5 pb-16 flex flex-col items-center">
-                <div className="w-full">
-                    {threads.length > 0 ? (
-                        threads.map(thread => (
-                            <ThreadComponent
-                                key={thread.id}
-                                id={thread.id}
-                                content={thread.content}
-                                user={thread.user}
-                                thread_images={thread.thread_images}
-                                created_at={thread.created_at}
-                                likes_count={thread.likes_count}
-                                is_liked={thread.is_liked}
-                                reposts_count={thread.reposts_count}
-                                is_reposted={thread.is_reposted}
-                                comment_count={thread.comment_count}
-                            />
-                        ))
-                    ) : (
-                        <div className="text-center p-4 text-gray-400">No threads found</div>
-                    )}
+        <div className="min-h-screen flex flex-col items-center">
+            <h1 className="text-2xl font-bold p-4 bg-[#111111] w-full text-center sticky top-0 z-10">Home</h1>
+            <PageWrapper>
+                <div className="pt-5 pb-16">
+                    <div className="flex flex-col items-center">
+                        <div className="w-full">
+                            {threads.length > 0 ? (
+                                threads.map(thread => (
+                                    <ThreadComponent
+                                        key={thread.id}
+                                        id={thread.id}
+                                        content={thread.content}
+                                        user={thread.user}
+                                        thread_images={thread.thread_images}
+                                        created_at={thread.created_at}
+                                        likes_count={thread.likes_count}
+                                        is_liked={thread.is_liked}
+                                        reposts_count={thread.reposts_count}
+                                        is_reposted={thread.is_reposted}
+                                        comment_count={thread.comment_count}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center p-4 text-gray-400">No threads found</div>
+                            )}
 
-                    {loading && page > 1 && (
-                        <div className="text-center p-4 text-gray-400">Loading more threads...</div>
-                    )}
+                            {loading && page > 1 && (
+                                <div className="text-center p-4 text-gray-400">Loading more threads...</div>
+                            )}
 
-                    {hasMore && !loading && (
-                        <button
-                            onClick={handleLoadMore}
-                            className="w-full py-3 mt-4 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                            Load more threads
-                        </button>
-                    )}
+                            {hasMore && !loading && (
+                                <button
+                                    onClick={handleLoadMore}
+                                    className="w-full py-3 mt-4 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+                                >
+                                    Load more threads
+                                </button>
+                            )}
 
-                    {!hasMore && threads.length > 0 && (
-                        <div className="text-center p-4 text-gray-500">You've reached the end</div>
-                    )}
+                            {!hasMore && threads.length > 0 && (
+                                <div className="text-center p-4 text-gray-500">You've reached the end</div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </PageWrapper>
+            </PageWrapper>
+        </div>
     );
 };
 
