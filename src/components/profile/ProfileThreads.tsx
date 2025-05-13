@@ -15,17 +15,17 @@ const ProfileThreads = ({ threads, activeFilter, setActiveFilter }: ProfileThrea
     ];
 
     return (
-        <div className="border-t border-[#333] mt-4">
-            <div className="border-b border-[#333]">
-                <div className="flex">
+        <div className="border-t border-[#333] mt-6">
+            <div className="border-b border-[#333] bg-[#111]">
+                <div className="flex justify-between px-4">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveFilter(tab.id)}
-                            className={`px-4 py-2 font-medium text-sm ${
+                            className={`flex-1 px-6 py-3 font-medium text-sm rounded-t-lg transition-all duration-200 ${
                                 activeFilter === tab.id
-                                    ? 'text-white border-b-2 border-white'
-                                    : 'text-gray-400 hover:text-white'
+                                    ? 'text-white border-b-2 border-blue-500 bg-[#222]'
+                                    : 'text-gray-400 hover:text-white hover:bg-[#222]'
                             }`}
                         >
                             {tab.title}
@@ -33,12 +33,11 @@ const ProfileThreads = ({ threads, activeFilter, setActiveFilter }: ProfileThrea
                     ))}
                 </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-6 space-y-4 px-4">
                 {threads.map(thread => (
-                    <ThreadComponent
-                        key={thread.id}
-                        {...thread}
-                    />
+                    <div key={thread.id} className="hover:bg-[#111] rounded-lg transition-colors duration-200">
+                        <ThreadComponent {...thread} />
+                    </div>
                 ))}
             </div>
         </div>

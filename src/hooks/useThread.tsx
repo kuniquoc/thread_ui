@@ -364,6 +364,39 @@ export const useThread = () => {
         }
     };
 
+    // Delete a thread
+    const deleteThread = async (threadId: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/threads/${threadId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+            });
+            
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.errors?.detail || 'Failed to delete thread');
+            }
+            
+            return true;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to delete thread');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         threads,
         loading,
@@ -381,5 +414,6 @@ export const useThread = () => {
         repostThread,
         likeComment,
         uploadImages,
+        deleteThread,
     };
 };
