@@ -65,18 +65,22 @@ const Comment = ({
             // Update reply count
             setTotalReplies(data.comment_count);
             
-            // If replies are currently shown, fetch new replies
+            // If replies are currently shown, add the new reply
             if (showReplies) {
-                getReplies(threadId, id).then(repliesData => {
-                    if (repliesData) {
-                        setReplies(repliesData);
-                    }
-                }).catch(error => {
-                    console.error('Failed to refresh replies after websocket event', error);
-                });
+                const newReply = {
+                    id: data.comment_id,
+                    content: data.content,
+                    user: data.user_info,
+                    created_at: new Date().toISOString(),
+                    is_liked: false,
+                    likes_count: 0,
+                    thread_id: threadId
+                };
+
+                setReplies(prev => [newReply, ...prev]);
             }
         }
-    }, [id, threadId, showReplies, getReplies]);
+    }, [id, threadId, showReplies]);
 
     // Subscribe to Pusher channel for this thread
     usePusher(`thread_${threadId}`, handlePusherEvent);

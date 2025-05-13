@@ -58,12 +58,14 @@ export default tseslint.config({
 This application uses environment variables for configuration. Follow these steps to set up your environment:
 
 1. Copy the `.env.example` file to create a new file named `.env.local`:
-   ```
+
+   ```bash
    cp .env.example .env.local
    ```
 
 2. Edit `.env.local` and replace the placeholder values with your actual credentials:
-   ```
+
+   ```bash
    VITE_IMGBB_API_KEY=your_actual_imgbb_api_key
    ```
 

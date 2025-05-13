@@ -50,6 +50,7 @@ List and get operations return data directly without status wrapper:
 - **Endpoint**: `GET /api/csrf/`
 - **Authentication**: Not Required
 - **Description**: Get CSRF token for making POST/PUT/DELETE requests
+
 - **Response**:
 
 ```json
@@ -64,7 +65,9 @@ List and get operations return data directly without status wrapper:
 - **Usage**:
 
 1. Call this endpoint first
+
 2. Get token from both response and cookie
+
 3. Include token in subsequent requests:
 
 ```text
@@ -76,6 +79,7 @@ X-CSRFToken: your-csrf-token
 The API includes automatic content moderation for threads and comments. When creating a thread or comment, the content is checked against a toxicity detection API. If the content is flagged as toxic:
 
 1. The creation will be rejected with an appropriate error message
+
 2. A notification will be sent to the user informing them that their content violated community standards
 
 #### Thread Creation Error (Toxic Content)
@@ -110,6 +114,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/auth/users/`
 - **Authentication**: Not Required
+
 - **Body**:
 
 ```json
@@ -143,6 +148,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/auth/users/login/`
 - **Authentication**: Not Required
+
 - **Body**:
 
 ```json
@@ -168,6 +174,25 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
 }
 ```
+
+#### User Logout
+
+- **Endpoint**: `POST /api/auth/users/logout/`
+- **Authentication**: Required
+- **Description**: Logs out the current user by removing their session and all related cookies
+
+- **Success Response**:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "message": "Logged out successfully"
+  }
+}
+```
+
+- **Effect**: This API không chỉ xóa session của người dùng trên server mà còn xóa các cookie liên quan đến phiên đăng nhập (`sessionid` và `csrftoken`) trên trình duyệt của người dùng
 
 #### Get Current User
 
@@ -224,6 +249,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/auth/users/change_password/`
 - **Authentication**: Required
+
 - **Body**:
 
 ```json
@@ -249,9 +275,11 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/users/?search=query`
 - **Authentication**: Required
+
 - **Query Params**:
   - `search`: Search query (username, first name, or last name)
   - `page`: Page number for pagination
+
 - **Response**:
 
 ```json
@@ -276,6 +304,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/users/{user_id}/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -295,7 +324,9 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/threads/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Response**:
 
 ```json
@@ -337,47 +368,62 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/threads/feed/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
 
 #### Get Following Feed
 
 - **Endpoint**: `GET /api/threads/following_feed/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
 
 #### Get My Threads
 
 - **Endpoint**: `GET /api/threads/my_threads/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Description**: Lấy tất cả thread do user hiện tại tạo
+
 - **Response**: Giống format của Get All Threads
 
 #### Get My Commented Threads
 
 - **Endpoint**: `GET /api/threads/my_commented_threads/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Description**: Lấy tất cả thread mà user hiện tại đã comment (không bao gồm thread do user tạo)
+
 - **Response**: Giống format của Get All Threads
 
 #### Get My Reposted Threads
 
 - **Endpoint**: `GET /api/threads/my_reposted_threads/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Description**: Lấy tất cả thread mà user hiện tại đã repost
+
 - **Response**: Giống format của Get All Threads
 
 #### Get User Threads
 
 - **Endpoint**: `GET /api/threads/user_threads/`
 - **Authentication**: Required
+
 - **Query Params**:
   - `user_id`: ID của user cần lấy thread
   - `page`: Số trang (pagination)
+
 - **Description**: Lấy tất cả thread của một user (bao gồm cả thread do user tạo và thread user đã repost)
+
 - **Response**: Giống format của Get All Threads
+
 - **Error Responses**:
   - 400 Bad Request: Khi thiếu tham số `user_id`
   - 404 Not Found: Khi không tìm thấy user với ID đã cho
@@ -386,6 +432,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/`
 - **Authentication**: Required
+
 - **Body**:
 
 ```json
@@ -441,6 +488,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/{thread_id}/like/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -454,6 +502,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/{thread_id}/repost/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -468,6 +517,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `DELETE /api/threads/{thread_id}/`
 - **Authentication**: Required
 - **Description**: Delete a thread. You can only delete your own threads.
+
 - **Success Response**:
 
 ```json
@@ -496,6 +546,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/threads/{thread_id}/comments/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -528,6 +579,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/threads/{thread_id}/comments/{comment_id}/replies/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -555,6 +607,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/`
 - **Authentication**: Required
+
 - **Body**:
 
 ```json
@@ -590,6 +643,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/like/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -603,6 +657,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -618,7 +673,9 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/follows/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Response**:
 
 ```json
@@ -655,6 +712,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/follows/`
 - **Authentication**: Required
+
 - **Body**:
 
 ```json
@@ -695,6 +753,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/follows/followers_count/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -709,7 +768,9 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/notifications/`
 - **Authentication**: Required
+
 - **Query Params**: `?page=1` (pagination)
+
 - **Response**:
 
 ```json
@@ -748,6 +809,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/notifications/unread_count/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -760,6 +822,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/notifications/{notification_id}/mark_read/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -773,6 +836,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `POST /api/notifications/mark_all_read/`
 - **Authentication**: Required
+
 - **Response**:
 
 ```json
@@ -785,96 +849,165 @@ When toxic content is detected, a notification is sent to the user who attempted
 
 - **Endpoint**: `GET /api/notifications/?is_read=false`
 - **Authentication**: Required
+
 - **Query Params**:
   - `is_read`: false
   - `page`: Page number for pagination
+
 - **Response**: Same as Get Notifications endpoint
 
-### WebSocket Support
+### WebSocket/Real-time Updates
 
-#### Thread WebSocket
+The application uses Pusher for real-time updates when deployed on PythonAnywhere. This enables real-time features like instant notifications, live thread updates, and comment updates.
 
-- **Endpoint**: `ws/thread/{thread_id}/`
-- **Authentication**: Required (via cookie)
-- **Events**:
-  - **Like Update**:
+#### Connection Details
 
-```json
-{
-  "type": "like_update",
-  "thread_id": 1,
-  "likes_count": 10,
-  "action": "like" or "unlike"
-}
-```
+- **Thread Channel**: `thread_{thread_id}`
+- **User Notification Channel**: `user_{user_id}`
 
-- **Comment Like Update**:
+#### Authentication
 
-```json
-{
-  "type": "comment_like_update",
-  "thread_id": 1,
-  "comment_id": 2,
-  "likes_count": 5,
-  "action": "like" or "unlike"
-}
-```
+- Client-side subscription with Pusher public key
 
-- **New Comment**:
+#### Events & Payloads
 
-```json
-{
-  "type": "new_comment",
-  "thread_id": 1,
-  "comment_id": 3,
-  "comment_count": 15,
-  "is_reply": false,
-  "parent_comment_id": null
-}
-```
+##### Thread Updates
 
-- **Comment Deleted**:
+1. **Like Update**
 
-```json
-{
-  "type": "comment_deleted",
-  "thread_id": 1,
-  "comment_count": 14
-}
-```
+   - **Event**: `like_update`
 
-- **Reply Deleted**:
+   - **Data**:
 
-```json
-{
-  "type": "reply_deleted",
-  "thread_id": 1,
-  "parent_comment_id": 2,
-  "replies_count": 3
-}
-```
+     ```json
+     {
+       "type": "like_update",
+       "thread_id": 1,
+       "likes_count": 10,
+       "action": "like" or "unlike"
+     }
+     ```
 
-#### User Notification WebSocket
+2. **Comment Like Update**
 
-- **Endpoint**: `ws/user/{user_id}/`
-- **Authentication**: Required (via cookie)
-- **Events**:
-  - **New Notification**:
+   - **Event**: `like_update`
 
-```json
-{
-  "type": "new_notification",
-  "notification_id": 1,
-  "notification_type": "like_thread" or "like_comment" or "comment_reply" or "thread_comment" or "follow" or "repost_thread" or "repost_comment",
-  "content": "Notification content"
-}
+   - **Data**:
+
+     ```json
+     {
+       "type": "comment_like_update",
+       "thread_id": 1,
+       "comment_id": 2,
+       "likes_count": 5,
+       "action": "like" or "unlike"
+     }
+     ```
+
+3. **New Comment**
+
+   - **Event**: `comment_update`
+
+   - **Data**:
+
+     ```json
+     {
+       "type": "new_comment",
+       "thread_id": 1,
+       "comment_id": 3,
+       "content": "Comment content", 
+       "comment_count": 15,
+       "is_reply": false,
+       "parent_comment_id": null,
+       "user_info": {
+         "id": 1,
+         "username": "username",
+         "avatar": "url_to_avatar_image"
+       }
+     }
+     ```
+
+4. **Comment Deleted**
+
+   - **Event**: `comment_update`
+
+   - **Data**:
+
+     ```json
+     {
+       "type": "comment_deleted",
+       "thread_id": 1,
+       "comment_count": 14
+     }
+     ```
+
+5. **Reply Deleted**
+
+   - **Event**: `comment_update`
+
+   - **Data**:
+
+     ```json
+     {
+       "type": "reply_deleted",
+       "thread_id": 1,
+       "parent_comment_id": 2,
+       "replies_count": 3
+     }
+     ```
+
+##### User Notifications
+
+1. **New Notification**
+
+   - **Event**: `notification_update`
+
+   - **Data**:
+
+     ```json
+     {
+       "type": "new_notification",
+       "notification_id": 1,
+       "notification_type": "like_thread" | "like_comment" | "comment_reply" |
+                           "thread_comment" | "follow" | "repost_thread" |
+                           "repost_comment" | "toxic_content",
+       "content": "Notification content"
+     }
+     ```
+
+#### Frontend Implementation Example
+
+```javascript
+// Initialize Pusher
+const pusher = new Pusher('your_pusher_key', {
+  cluster: 'your_pusher_cluster',  
+  forceTLS: true
+});
+
+// Subscribe to a thread channel
+const threadChannel = pusher.subscribe(`thread_${threadId}`);
+
+// Listen for like updates
+threadChannel.bind('like_update', function(data) {
+  // Update UI with new like count
+  console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
+});
+
+// Subscribe to user notifications
+const userChannel = pusher.subscribe(`user_${userId}`);
+
+// Listen for new notifications
+userChannel.bind('notification_update', function(data) {
+  // Update UI with new notification
+  console.log(`New notification: ${data.content}`);
+});
 ```
 
 ### Authentication & Headers
 
 All APIs (except registration and login) require authentication. Required headers:
 
-```text
+```json
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer <access_token>  # For JWT authentication
@@ -932,9 +1065,15 @@ Status codes:
 ## Development Setup
 
 1. Clone the repository
+
 2. Create virtual environment
-3. Install dependencies:
+
+3. Install dependencies: `pip install -r requirements.txt`
+
 4. Create config.py with required settings
+
 5. Run migrations: `python manage.py migrate`
+
 6. Create superuser: `python manage.py createsuperuser`
+
 7. Run server: `python manage.py runserver`

@@ -130,24 +130,28 @@ const ThreadComponent = ({
     };
 
     const handlePusherEvent = useCallback((eventData: any) => {
-        const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
-        
-        if (data.type === 'new_comment') {
+        if (eventData.type === 'new_comment') {
             // Update comment count
-            setCommentCount(data.comment_count);
+            setCommentCount(eventData.comment_count);
 
-            // If comments are currently shown, fetch new comment
-            if (showComments) {
-                getComments(id).then(response => {
-                    if (response) {
-                        setLoadedComments(response.results);
-                    }
-                }).catch(error => {
-                    console.error('Failed to refresh comments after websocket event', error);
-                });
+            // If this is a new comment and comments are currently shown, add it to the list
+            if (!eventData.is_reply && showComments) {
+                const newComment = {
+                    id: eventData.comment_id,
+                    content: eventData.content,
+                    user: eventData.user_info,
+                    created_at: new Date().toISOString(), // Use current time as created_at
+                    is_liked: false,
+                    likes_count: 0,
+                    replies_count: 0,
+                    is_reposted: false
+                };
+
+                // Add new comment to the beginning of the list
+                setLoadedComments(prev => [newComment, ...prev]);
             }
         }
-    }, [id, showComments, getComments]);
+    }, [showComments]);
 
     // Subscribe to Pusher channel for this thread
     usePusher(`thread_${id}`, handlePusherEvent);

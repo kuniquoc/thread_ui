@@ -54,7 +54,11 @@ const Reply = ({
 		const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
 
 		if (data.type === 'new_comment' && data.comment_id === id) {
-			setTotalLikes(data.likes_count);
+			// Update like count if it changed
+			if (data.likes_count !== undefined) {
+				setTotalLikes(data.likes_count);
+				setIsLiked(data.is_liked || false);
+			}
 		}
 	}, [id]);
 
