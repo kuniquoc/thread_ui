@@ -5,6 +5,7 @@ import { useSearch } from '../hooks/useSearch';
 import { useFollow } from '../hooks/useFollow';
 import { useUser } from '../hooks/useUser';
 import { FiSearch } from 'react-icons/fi';
+import { useScroll } from '../hooks/useScroll';
 
 const Search = () => {
     const [query, setQuery] = useState<string>('');
@@ -12,6 +13,7 @@ const Search = () => {
     const { results, loading, error, pagination, searchUsers, loadMore } = useSearch();
     const { followUser, isFollowing } = useFollow();
     const { user: currentUser, getCurrentUser } = useUser();
+    const isVisible = useScroll();
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(e.target.value);
@@ -50,7 +52,13 @@ const Search = () => {
 
     return (
         <div className="min-h-screen flex flex-col items-center">
-            <div className="w-full bg-gradient-to-b from-gray-900 to-gray-800 sticky top-0 z-10">
+            <div 
+                className={`w-full bg-gradient-to-b from-gray-900 to-gray-800 sticky top-0 z-10 
+                    transition-all duration-500 ease-in-out transform-gpu backdrop-blur-sm
+                    ${isVisible 
+                        ? 'translate-y-0 opacity-100 scale-100' 
+                        : '-translate-y-full opacity-0 scale-95'}`}
+            >
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-2xl font-bold p-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
                         Search

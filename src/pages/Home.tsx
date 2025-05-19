@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useThread } from '../hooks/useThread';
 import { Thread } from '../types';
 import { FiMessageCircle, FiUser } from 'react-icons/fi';
+import { useScroll } from '../hooks/useScroll';
 
 const Home = () => {
     const { getThreadFeed, getFollowingFeed, loading, error } = useThread();
@@ -11,6 +12,7 @@ const Home = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [feedType, setFeedType] = useState<'all' | 'following'>('all');
+    const isVisible = useScroll();
 
     const fetchThreads = useCallback(async (pageNumber: number) => {
         try {
@@ -82,7 +84,13 @@ const Home = () => {
 
     return (
         <div className="min-h-screen flex flex-col items-center">
-            <div className="w-full bg-gradient-to-b from-gray-900 to-gray-800 sticky top-0 z-10">
+            <div 
+                className={`w-full bg-gradient-to-b from-gray-900 to-gray-800 sticky top-0 z-10 
+                    transition-all duration-500 ease-in-out transform-gpu backdrop-blur-sm
+                    ${isVisible 
+                        ? 'translate-y-0 opacity-100 scale-100' 
+                        : '-translate-y-full opacity-0 scale-95'}`}
+            >
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-2xl font-bold p-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Home</h1>
                     <div className="flex justify-center pb-4">

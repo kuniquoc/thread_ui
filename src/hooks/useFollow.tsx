@@ -28,14 +28,18 @@ export const useFollow = () => {
                 throw new Error('Failed to get CSRF token');
             }
 
+            let queryUserId = userId;
             if (userId === 0) {
                 if (!user) {
                     await getCurrentUser();
                 }
-                userId = user?.id || 0;
+                if (!user?.id) {
+                    throw new Error('User not found');
+                }
+                queryUserId = user.id;
             }
 
-            const response = await fetch(`${API_URL}/follows/?user_id=${userId}&page=${page}`, {
+            const response = await fetch(`${API_URL}/follows/followers/?user_id=${queryUserId}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
