@@ -1,17 +1,20 @@
 import Navigation from './components/Navigation';
 import { Outlet } from 'react-router-dom';
 import { useNoNavigation } from './hooks/useNoNavigation';
+import { PusherProvider } from './hooks/usePusherContext';
 
 function App() {
   const noNavigation = useNoNavigation();
 
   return (
-    <div className="flex flex-col min-h-screen items-center">
-      {!noNavigation && <Navigation />}
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-    </div>
+    <PusherProvider>
+      <div>
+        {!noNavigation && <Navigation />}
+        <main>
+          <Outlet />
+        </main>
+      </div>
+    </PusherProvider>
   );
 }
 

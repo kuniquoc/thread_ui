@@ -11,14 +11,14 @@ import {
 	FiSave,
 	FiAlertCircle,
 } from 'react-icons/fi';
-import { Modal, ModalBody } from 'flowbite-react';
 import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useThread } from '../hooks/useThread';
+import { useNotification } from '../hooks/useNotification';
 import { CreateThreadRequest } from '../types';
-
+import Modal from './common/Modal';
 
 const Navigation = () => {
 	const [openModal, setOpenModal] = useState<string | undefined>();
@@ -27,34 +27,45 @@ const Navigation = () => {
 	const { logout } = useAuth();
 	const { user, getCurrentUser } = useUser();
 	const { createThread, uploadImages, loading, error } = useThread();
+	const { getUnreadCount } = useNotification();
 	const navigate = useNavigate();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 	const [threadContent, setThreadContent] = useState('');
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
+	const [unreadCount, setUnreadCount] = useState(0);
 
-	// Get current user info
 	useEffect(() => {
 		const fetchUser = async () => {
 			await getCurrentUser();
 		};
 		fetchUser();
-	}, [])
+	}, []);
 
-	// Reset error message when modal closes or operation completes
 	useEffect(() => {
 		if (!openModal || !loading) {
 			setErrorMessage(null);
 		}
 	}, [openModal, loading]);
 
-	// Update error message when there's an error from the hook
 	useEffect(() => {
 		if (error) {
 			setErrorMessage(error);
 		}
 	}, [error]);
+
+	useEffect(() => {
+		const fetchUnreadCount = async () => {
+			const result = await getUnreadCount();
+			if (result) {
+				setUnreadCount(result.count);
+			}
+		};
+		fetchUnreadCount();
+		const interval = setInterval(fetchUnreadCount, 30000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const handleLogout = async () => {
 		await logout();
@@ -80,122 +91,101 @@ const Navigation = () => {
 		setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
 	};
 
-	// Function to generate preview URLs for files
 	const getFilePreview = (file: File) => {
 		return URL.createObjectURL(file);
 	};
 
-	const saveThread = async (publish = true) => {
+	const saveThread = async () => {
 		try {
-			if (threadContent.trim() === '' && selectedFiles.length === 0) {
-				setErrorMessage('Please add some content or media to your thread.');
-				return;
-			}
+			setIsUploading(true);
 
-			setErrorMessage(null);
-
-			// Handle image uploads first if there are any
 			let imageUrls: string[] = [];
 			if (selectedFiles.length > 0) {
-				setIsUploading(true);
-				// Upload images to ImgBB
-				imageUrls = await uploadImages(selectedFiles);
-				setIsUploading(false);
-
-				if (imageUrls.length === 0) {
-					setErrorMessage('All image uploads failed. Please check your ImgBB API key configuration.');
-					return;
-				}
-
-				if (imageUrls.length < selectedFiles.length) {
-					setErrorMessage('Some images failed to upload. You can try again or proceed with the successful ones.');
+				const uploadedImages = await uploadImages(selectedFiles);
+				if (uploadedImages) {
+					imageUrls = uploadedImages;
 				}
 			}
 
 			const threadData: CreateThreadRequest = {
 				content: threadContent,
-				// Only include images if we have any URLs
 				...(imageUrls.length > 0 && { images: imageUrls })
 			};
 
 			const result = await createThread(threadData);
 
 			if (result) {
-				// Reset the form
 				setThreadContent('');
 				setSelectedFiles([]);
-
-				// Close the modal after successful thread creation regardless of publish status
 				props.setOpenModal(undefined);
-
-				// If not publishing (saving as draft), show a success message
-				if (!publish) {
-					// Show toast or success message for drafts here if needed
-					// Since modal is closed, we don't need to set error message for draft success
-				}
+				window.location.reload();
 			}
 		} catch (err) {
 			console.error('Error saving thread:', err);
 			setErrorMessage('Failed to save thread. Please try again.');
+		} finally {
+			setIsUploading(false);
 		}
 	};
 
 	const handleSaveDraft = () => {
-		saveThread(false);
+		saveThread();
 	};
 
 	return (
 		<div className="fixed top-0 left-0 z-40 w-30 h-full">
-			<div className="grid h-full max-w-lg sm:max-w-4xl grid-rows-6 mx-auto font-medium bg-[#111] text-[#666]">
+			<div className="grid h-full max-w-lg sm:max-w-4xl grid-rows-6 mx-auto font-medium bg-gradient-to-b from-gray-900 to-gray-800 text-gray-400 border-r border-gray-700/50">
 				<Link
 					to="/"
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors"
 					onClick={() => setActiveTab('Home')}
 				>
-					<FiHome className={`text-3xl ${activeTab === 'Home' && 'fill-white'}`} />
+					<FiHome className={`text-3xl transition-colors ${activeTab === 'Home' ? 'text-blue-500' : ''}`} />
 				</Link>
 				<Link
 					to="/search"
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors"
 					onClick={() => setActiveTab('Search')}
 				>
-					<FiSearch className={`text-3xl ${activeTab === 'Search' && 'fill-white'}`} />
+					<FiSearch className={`text-3xl transition-colors ${activeTab === 'Search' ? 'text-blue-500' : ''}`} />
 				</Link>
 				<button
 					onClick={() => {
-						props.setOpenModal('default')
-						setActiveTab('Create')
+						props.setOpenModal('default');
+						setActiveTab('Create');
 					}}
-					type="button" 
-					data-modal-target="create-post-modal"
-					data-modal-toggle="create-post-modal"
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					type="button"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors"
 				>
-					<FiEdit className="text-3xl" />
+					<FiEdit className={`text-3xl transition-colors ${activeTab === 'Create' ? 'text-blue-500' : ''}`} />
 				</button>
 				<Link
 					to="/notification"
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors relative"
 					onClick={() => setActiveTab('Notification')}
 				>
-					<FiBell className={`text-3xl ${activeTab === 'Activity' && 'fill-white'}`} />
+					<FiBell className={`text-3xl transition-colors ${activeTab === 'Notification' ? 'text-blue-500' : ''}`} />
+					{unreadCount > 0 && (
+						<div className="absolute top-2 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+							{unreadCount > 99 ? '99+' : unreadCount}
+						</div>
+					)}
 				</Link>
 				<Link
 					to="/profile"
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors"
 					onClick={() => setActiveTab('Profile')}
 				>
-					<FiUser className={`text-3xl ${activeTab === 'Profile' && 'fill-white'}`} />
+					<FiUser className={`text-3xl transition-colors ${activeTab === 'Profile' ? 'text-blue-500' : ''}`} />
 				</Link>
 				<button
 					onClick={handleLogout}
-					className="inline-flex flex-col items-center justify-center px-5 hover:bg-[#333]"
+					className="inline-flex flex-col items-center justify-center px-5 hover:bg-white/5 transition-colors"
 				>
-					<FiLogOut className="text-3xl" />
+					<FiLogOut className="text-3xl hover:text-red-500 transition-colors" />
 				</button>
 			</div>
 
-			{/* Create Post Modal */}
 			<AnimatePresence>
 				<motion.div
 					initial={{ y: 10, opacity: 0 }}
@@ -206,181 +196,153 @@ const Navigation = () => {
 					<Modal
 						show={props.openModal === 'default'}
 						onClose={() => props.setOpenModal(undefined)}
-						dismissible
+						className="max-w-4xl h-[600px] w-full"
 					>
-						<ModalBody className="fixed inset-0 flex items-center justify-center overflow-x-hidden overflow-y-auto p-0">
-							<div className="relative max-w-md">
-								<div className="relative rounded-t-lg h-[500px] w-[600px] bg-[#222] text-gray-100 shadow-lg">
-									<div className="border-b border-[#333]">
-										<div className="grid grid-cols-8 py-3 px-4">
-											<button
-												onClick={() => props.setOpenModal(undefined)}
-												type="button"
-												className="absolute text-left pt-1 col-span-1 rounded-lg inline-flex justify-center items-center text-[#bbb] text-xs"
-												data-modal-hide="create-post-modal"
-											>
-												Cancel
-												<span className="sr-only">
-													Close modal
-												</span>
-											</button>
-											<h1 className="col-span-7 text-center font-medium">
-												New thread
-											</h1>
-											<button
-												type="button"
-												onClick={handleSaveDraft}
-												disabled={loading}
-												className="absolute right-4 pt-1 rounded-lg inline-flex justify-center items-center text-[#777] hover:text-[#999] disabled:text-[#444] disabled:hover:text-[#444] disabled:cursor-not-allowed"
-											>
-												<FiSave className={loading ? "text-[#444]" : "text-[#777] hover:text-[#999]"} />
-												<span className="sr-only">
-													Save draft
-												</span>
-											</button>
+						<div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 text-white shadow-xl border border-gray-700 flex flex-col overflow-hidden">
+							<div className="border-b border-gray-700">
+								<div className="grid grid-cols-8 py-3 px-4">
+									<button
+										onClick={() => props.setOpenModal(undefined)}
+										type="button"
+										className="absolute text-left pt-1 col-span-1 text-gray-400 hover:text-white text-sm transition-colors"
+									>
+										Cancel
+									</button>
+									<h1 className=" col-span-7 text-center font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+										New thread
+									</h1>
+									<button
+										type="button"
+										onClick={handleSaveDraft}
+										disabled={loading || isUploading}
+										className="absolute right-4 pt-1 text-gray-400 hover:text-white disabled:text-gray-600 disabled:hover:text-gray-600 disabled:cursor-not-allowed transition-colors"
+									>
+										<FiSave className="w-5 h-5" />
+									</button>
+								</div>
+							</div>
+
+							<form className="flex flex-col h-full max-h-[600px] min-h-0">
+								{errorMessage && (
+									<div className="px-4 pt-2">
+										<div className={`p-2 rounded-md ${
+											errorMessage.includes('saved') 
+												? 'bg-green-900/20 text-green-400' 
+												: 'bg-red-900/20 text-red-400'
+										} text-sm flex items-center justify-center gap-2`}>
+											{errorMessage.includes('saved') ? null : <FiAlertCircle />}
+											{errorMessage}
 										</div>
 									</div>
+								)}
 
-									<form className="space-y-6" action="#">
-										{/* Error message display */}
-										{errorMessage && (
-											<div className="px-4 pt-2 text-center">
-												<div className={`p-2 rounded-md ${errorMessage.includes('saved') ? 'bg-green-800 bg-opacity-20 text-green-400' : 'bg-red-800 bg-opacity-20 text-red-400'} text-xs flex items-center justify-center`}>
-													{errorMessage.includes('saved') ? null : <FiAlertCircle className="mr-1" />}
-													{errorMessage}
-												</div>
-											</div>
-										)}
-
-										<div className="px-4 py-6 flex w-full gap-2">
-											<div className="ml-2">
-												<div className="relative border-l-2 border-[#333] border-opacity-70 ml-2">
-													<div className="flex -ml-7 flex-col w-14 h-28 max-h-28 justify-between items-center">
-														<div>
-															<img
-																src={user?.avatar}
-																width={35}
-																height={35}
-																alt="Account Avatar"
-																className="rounded-full"
-															/>
-														</div>
+								<div className="flex-1 px-4 py-4 overflow-y-auto min-h-0">
+									<div className="flex w-full gap-2">
+										<div className="ml-2">
+											<div className="relative border-l-2 border-gray-700 border-opacity-70 ml-2 h-full">
+												<div className="flex -ml-7 flex-col w-14 items-center">
+													<div>
+														<img
+															src={user?.avatar}
+															width={35}
+															height={35}
+															alt="Account Avatar"
+															className="rounded-full border-2 border-gray-700"
+														/>
 													</div>
 												</div>
 											</div>
-											<div className="flex w-full h-full">
-												<div className="space-y-6 w-full">
-													<div className="flex flex-col items-start">
-														<p className="text-xs text-[#666]">
-															@{user?.username}
-														</p>
-													</div>
-													<div className="w-full">
-														<textarea
-															name="post"
-															id="post"
-															className="bg-transparent text-xs border-none w-full resize-none overflow-hidden focus:border-none ring-0 p-0 focus:ring-0 active:ring-0"
-															required
-															placeholder="Start a thread..."
-															rows={1}
-															style={{ minHeight: '20px', height: 'auto' }}
-															value={threadContent}
-															onChange={(e) => setThreadContent(e.target.value)}
-															onInput={(e) => {
-																e.currentTarget.style.height = 'auto';
-																e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-															}}
-														></textarea>
+										</div>
+										<div className="flex flex-col w-full min-w-0">
+											<div className="flex flex-col">
+												<div className="flex flex-col items-start">
+													<p className="text-sm text-gray-400">
+														@{user?.username}
+													</p>
+												</div>
+												<div className="w-full mt-4">
+													<textarea
+														name="post"
+														id="post"
+														className="w-full h-[200px] bg-transparent text-white border-none resize-none focus:ring-0 placeholder-gray-500 text-sm whitespace-pre-wrap"
+														required
+														placeholder="Start a thread..."
+														value={threadContent}
+														onChange={(e) => setThreadContent(e.target.value)}
+													/>
+												</div>
 
-														{selectedFiles.length > 0 && (
-															<div className="mt-3">
-																<div className="flex gap-2 overflow-x-auto pb-2">
-																	{selectedFiles.map((file, index) => (
-																		<div key={index} className="relative min-w-[100px] h-[100px] bg-[#333] rounded-md">
-																			{file.type.startsWith('image/') ? (
-																				<img
-																					src={getFilePreview(file)}
-																					alt={`Preview ${index}`}
-																					className="w-full h-full object-cover rounded-md"
-																				/>
-																			) : file.type.startsWith('video/') ? (
-																				<video
-																					src={getFilePreview(file)}
-																					className="w-full h-full object-cover rounded-md"
-																					controls
-																				/>
-																			) : null}
+												{selectedFiles.length > 0 && (
+													<div className="mt-3 w-full">
+														<div className="overflow-x-auto pb-4 hide-scrollbar">
+															<div className="flex flex-nowrap gap-2">
+																{selectedFiles.map((file, index) => (
+																	<div key={index} className="flex-none w-[280px]">
+																		<div className="relative aspect-video bg-gray-800/50 rounded-md overflow-hidden">
+																			<img
+																				src={getFilePreview(file)}
+																				alt={`Selected ${index + 1}`}
+																				className="w-full h-full object-contain bg-black/30"
+																				onLoad={(e) => {
+																					const target = e.target as HTMLImageElement;
+																					target.classList.remove('opacity-0');
+																				}}
+																			/>
 																			<button
 																				type="button"
 																				onClick={() => removeSelectedFile(file)}
-																				className="absolute top-1 right-1 bg-[#111] bg-opacity-70 rounded-full p-1 text-white"
+																				className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
+																				disabled={isUploading}
 																			>
-																				<FiX size={14} />
+																				<FiX className="w-5 h-5" />
 																			</button>
 																		</div>
-																	))}
-																</div>
+																	</div>
+																))}
 															</div>
-														)}
+														</div>
 													</div>
-
-													<div className="flex space-x-3">
-														<input
-															type="file"
-															ref={fileInputRef}
-															className="hidden"
-															onChange={handleFileChange}
-															multiple
-															accept="image/*"
-														/>
-														<button
-															type="button"
-															onClick={handleFileAttachment}
-														>
-															<FiPaperclip className="text-[#777] hover:text-[#999]" />
-														</button>
-														{/* Save button moved to header */}
-													</div>
-
-												</div>
-												<button
-													type="button"
-													className=" mt-0 right-2.5 text-sm w-8 h-8 ml-auto inline-flex justify-center items-center "
-													data-modal-hide="create-post-modal"
-												>
-													<FiX className="w-4 h-4 text-[#777]" />
-													<span className="sr-only">
-														Close modal
-													</span>
-												</button>
+												)}
 											</div>
 										</div>
-
-										{/* Footer */}
-										<div className="flex justify-between items-center px-5 bottom-0 right-0 left-0 fixed pb-6">
-											<div className="text-xs text-[#666]">
-												<p>Anyone can reply</p>
-											</div>
-											<button
-												onClick={(e) => {
-													e.preventDefault();
-													saveThread(true);
-												}}
-												type="button"
-												disabled={loading || isUploading}
-												className="text-left col-span-1 rounded-lg inline-flex justify-center items-center text-blue-400 text-sm font-medium disabled:text-opacity-50 disabled:cursor-not-allowed"
-												data-modal-hide="create-post-modal"
-											>
-												{isUploading ? 'Uploading images...' : loading ? 'Posting...' : 'Post'}
-												<span className="sr-only">
-													Post
-												</span>
-											</button>
-										</div>
-									</form>
+									</div>
 								</div>
-							</div>
-						</ModalBody>
+
+								<div className="border-t border-gray-700 px-4 py-3 flex justify-between items-center bg-gray-800/50">
+									<input
+										type="file"
+										ref={fileInputRef}
+										className="hidden"
+										onChange={handleFileChange}
+										multiple
+										accept="image/*"
+										disabled={isUploading}
+									/>
+									<button
+										type="button"
+										onClick={handleFileAttachment}
+										disabled={isUploading}
+										className="text-gray-400 hover:text-white transition-colors"
+									>
+										<FiPaperclip className="w-5 h-5" />
+									</button>
+
+									<button
+										type="button"
+										onClick={() => saveThread()}
+										disabled={!threadContent.trim() || loading || isUploading}
+										className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-full hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
+									>
+										{loading || isUploading ? (
+											<div className="flex items-center gap-2">
+												<div className="w-5 h-5 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+												<span>Posting...</span>
+											</div>
+										) : 'Post'}
+									</button>
+								</div>
+							</form>
+						</div>
 					</Modal>
 				</motion.div>
 			</AnimatePresence>

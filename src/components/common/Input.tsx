@@ -4,21 +4,28 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
     name: string;
     error?: string;
+    className?: string;
 }
 
-const Input = ({ label, name, error, ...props }: InputProps) => {
+const Input = ({ label, name, error, className = '', ...props }: InputProps) => {
     return (
-        <div>
-            <label htmlFor={name} className="block text-2xl font-medium text-gray-300">
+        <div className="w-full">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-300 mb-1">
                 {label}
             </label>
             <input
                 id={name}
                 name={name}
                 {...props}
-                className="mt-1 block w-100 h-10 rounded-md border-gray-600 bg-gray-700 text-white"
+                className={`block w-full px-3 py-2 rounded-lg border border-gray-600 shadow-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    text-white placeholder-gray-400 ${className}`}
             />
-            {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+            {error && (
+                <p className="mt-1 text-sm text-red-400">
+                    {error}
+                </p>
+            )}
         </div>
     );
 };

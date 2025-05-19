@@ -1,42 +1,69 @@
-import { UserResponse } from '../../types/AuthTypes';
+import { FiUser, FiUserCheck } from 'react-icons/fi';
 
 interface SearchUserAccountProps {
-    user: UserResponse;
-    followersCount?: number;
+    user: {
+        id: number;
+        username: string;
+        first_name: string;
+        last_name: string;
+        avatar: string | null;
+    };
+    isFollowing: boolean;
+    onFollow: () => void;
 }
 
-const SearchUserAccount = ({
-    user,   
-}: SearchUserAccountProps) => {
-    const { username, first_name, last_name, avatar } = user;
-    const fullName = `${first_name} ${last_name}`.trim();
+const SearchUserAccount = ({ user, isFollowing, onFollow }: SearchUserAccountProps) => {
+    const getInitials = (firstName: string, lastName: string) => {
+        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    };
 
     return (
-        <div className="px-4 w-full my-4 clear-both">
-            <div className="flex justify-start items-start gap-4">
-                <div className="">
-                    <img
-                        src={avatar || '/avatars/default-avatar.png'}  // Use default avatar as fallback
-                        width={70}
-                        height={70}
-                        alt="Account Avatar"
-                        className="rounded-full"
-                    />
+        <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+                <div className="relative">
+                    {user.avatar ? (
+                        <img
+                            src={user.avatar}
+                            alt={`${user.username}'s avatar`}
+                            className="w-12 h-12 rounded-full border-2 border-gray-700"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                            <span className="text-gray-400 font-medium">
+                                {getInitials(user.first_name, user.last_name)}
+                            </span>
+                        </div>
+                    )}
                 </div>
-                <div className="w-full">
-                    <div className="if-verified flex items-center gap-2">
-                        <p className="text-sm text-gray-100 leading-none">
-                            {username}
-                        </p>
-                    </div>
-                    <p className="text-sm text-[#777] mt-0.5">{fullName}</p>
-                </div>
-                <div className="text-gray-300 flex justify-end text-xs">
-                    <button className="border border-[#333] px-6 py-1.5 rounded-lg">
-                        Follow
-                    </button>
+
+                <div>
+                    <h3 className="font-medium text-white">
+                        {user.first_name} {user.last_name}
+                    </h3>
+                    <p className="text-sm text-gray-400">@{user.username}</p>
                 </div>
             </div>
+
+            <button
+                onClick={onFollow}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2
+                    ${isFollowing
+                        ? 'bg-gray-700 text-white hover:bg-gray-600'
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500'
+                    }`}
+            >
+                {isFollowing ? (
+                    <>
+                        <FiUserCheck className="w-4 h-4" />
+                        <span>Following</span>
+                    </>
+                ) : (
+                    <>
+                        <FiUser className="w-4 h-4" />
+                        <span>Follow</span>
+                    </>
+                )}
+            </button>
         </div>
     );
 };

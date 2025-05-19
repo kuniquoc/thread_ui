@@ -7,14 +7,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "postinstall": "flowbite-react patch"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.17",
+    "@tailwindcss/vite": "^4.1.6",
+    "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
-    "flowbite-react": "^0.11.5",
     "framer-motion": "^12.6.2",
+    "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",

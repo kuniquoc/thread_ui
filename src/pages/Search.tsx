@@ -1,119 +1,148 @@
 import { useState, useEffect } from 'react';
 import PageWrapper from '../components/PageWrapper';
 import SearchUserAccount from '../components/search/SearchUserAccount';
-
 import { useSearch } from '../hooks/useSearch';
+import { useFollow } from '../hooks/useFollow';
+import { useUser } from '../hooks/useUser';
+import { FiSearch } from 'react-icons/fi';
 
 const Search = () => {
     const [query, setQuery] = useState<string>('');
     const [page, setPage] = useState<number>(1);
     const { results, loading, error, pagination, searchUsers, loadMore } = useSearch();
+    const { followUser, isFollowing } = useFollow();
+    const { user: currentUser, getCurrentUser } = useUser();
 
-    // Handle search input changes
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(e.target.value);
     };
 
-    // Handle search form submission
+    const handleFollow = async (userId: number) => {
+        await followUser({ followed_id: userId });
+    };
+
     const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setPage(1); // Reset to first page on new search
+        setPage(1);
         if (query.trim()) {
             searchUsers(query);
         }
     };
 
-    // Perform initial search when component mounts (optional)
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            await getCurrentUser();
+        };
+        fetchCurrentUser();
+    }, []);
+
     useEffect(() => {
         searchUsers('');
     }, []);
 
-    // Handle load more button click
     const handleLoadMore = () => {
         if (pagination?.next && !loading) {
             loadMore(pagination.next);
         }
     };
 
+    const filteredResults = results.filter(user => user.id !== currentUser?.id);
+
     return (
-        <PageWrapper>
-            <div className="pt-5 pb-16 flex flex-col items-center overflow-y-auto hide-scrollbar">
-                {/* Header section */}
-                <header className="w-full px-4 flex flex-col items-center">
-                    <h1 className="text-4xl font-semibold mb-2">Search</h1>
-                    <div>
-                        <form onSubmit={handleSearchSubmit}>
-                            <label htmlFor="search">
+        <div className="min-h-screen flex flex-col items-center">
+            <div className="w-full bg-gradient-to-b from-gray-900 to-gray-800 sticky top-0 z-10">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-2xl font-bold p-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                        Search
+                    </h1>
+                </div>
+            </div>
+
+            <PageWrapper>
+                <div className="pt-5 pb-16">
+                    <div className="w-full pb-5 flex flex-col items-center">
+                        <form onSubmit={handleSearchSubmit} className="w-full max-w-md">
+                            <div className="relative">
                                 <input
                                     type="search"
                                     id="search"
-                                    placeholder="Search"
-                                    className="w-200 border-none rounded-lg text-md px-3 py-2 bg-[#333] text-gray-200"
+                                    placeholder="Search users..."
+                                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                     value={query}
                                     onChange={handleSearchChange}
                                 />
-                            </label>
+                            </div>
                         </form>
                     </div>
-                </header>
 
-                {/* Loading indicator */}
-                {loading && page === 1 && (
-                    <div className="my-4 text-center">
-                        <p>Loading...</p>
-                    </div>
-                )}
+                    {loading && page === 1 && (
+                        <div className="flex justify-center p-4">
+                            <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                        </div>
+                    )}
 
-                {/* Error message */}
-                {error && (
-                    <div className="my-4 text-center text-red-500">
-                        <p>Error: {error}</p>
-                    </div>
-                )}
+                    {error && (
+                        <div className="text-center p-4 text-red-400 bg-red-900/20 rounded-lg border border-red-800">
+                            {error}
+                        </div>
+                    )}
 
-                {/* Search results */}
-                {!loading && !error && results.length === 0 && (
-                    <div className="my-4 text-center">
-                        <p>No results found</p>
-                    </div>
-                )}
+                    {!loading && !error && query === '' && (
+                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                            <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                                <FiSearch className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">Search for people</h3>
+                            <p className="text-gray-400">Find and connect with others</p>
+                        </div>
+                    )}
 
-                {/* Display search results */}
-                {results.map((user, index) => (
-                    <div key={user.id} className="w-full">
-                        <SearchUserAccount
-                            user={user}
-                            followersCount={Math.floor(Math.random() * 1000000)} // Example follower count
-                        />
-                        {index < results.length - 1 && (
-                            <div className="border border-[#222] border-opacity-50 w-full"></div>
-                        )}
-                    </div>
-                ))}
+                    {!loading && !error && query !== '' && filteredResults.length === 0 && (
+                        <div className="text-center p-8 text-gray-400 bg-gray-800/20 rounded-xl border border-gray-700/50">
+                            No users found matching "{query}"
+                        </div>
+                    )}
 
-                {/* Loading more indicator */}
-                {loading && page > 1 && (
-                    <div className="text-center p-4 text-gray-400">
-                        Loading more results...
-                    </div>
-                )}
+                    {filteredResults.map((user, index) => (
+                        <div key={user.id} className="w-full">
+                            <div className="bg-gray-800/30 rounded-xl p-4 hover:bg-gray-800/50 transition-all duration-200">
+                                <SearchUserAccount
+                                    user={user}
+                                    isFollowing={isFollowing(user.id)}
+                                    onFollow={() => handleFollow(user.id)}
+                                />
+                            </div>
+                            {index < filteredResults.length - 1 && (
+                                <div className="h-px bg-gray-700/30 my-4"></div>
+                            )}
+                        </div>
+                    ))}
 
-                {/* Load more button */}
-                {pagination?.next && !loading && (
-                    <button
-                        onClick={handleLoadMore}
-                        className="w-full max-w-md py-3 mt-4 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                        Load more results
-                    </button>
-                )}
+                    {loading && page > 1 && (
+                        <div className="flex justify-center p-4">
+                            <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                        </div>
+                    )}
 
-                {/* End of results message */}
-                {!pagination?.next && results.length > 0 && (
-                    <div className="text-center p-4 text-gray-500">You've reached the end</div>
-                )}
-            </div>
-        </PageWrapper>
+                    {pagination?.next && !loading && (
+                        <div className="flex justify-center mt-6">
+                            <button
+                                onClick={handleLoadMore}
+                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-medium text-sm hover:from-blue-500 hover:to-purple-500 transition-all duration-300 transform hover:-translate-y-0.5"
+                            >
+                                Load more
+                            </button>
+                        </div>
+                    )}
+
+                    {!pagination?.next && filteredResults.length > 0 && (
+                        <div className="text-center p-4 text-gray-500">
+                            You've reached the end
+                        </div>
+                    )}
+                </div>
+            </PageWrapper>
+        </div>
     );
 };
 

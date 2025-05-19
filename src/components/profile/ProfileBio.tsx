@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { FiUser, FiLoader } from 'react-icons/fi';
 import { useUser } from '../../hooks/useUser';
 import { useProfile } from '../../hooks/useProfile';
 import ProfileInfo from './ProfileInfo';
@@ -29,13 +30,29 @@ const ProfileBio = () => {
         }
     }, [user, activeFilter]);
 
+    if (userLoading) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center animate-pulse mb-4">
+                    <FiUser className="w-8 h-8 text-gray-600" />
+                </div>
+                <p className="text-gray-400">Loading profile...</p>
+            </div>
+        );
+    }
+
     return (
         <>
-            {userLoading && <div>Loading user...</div>}
             {!userLoading && user && <ProfileInfo user={user} />}
 
-            {threadLoading && <div>Loading threads...</div>}
-            {!threadLoading && (
+            {threadLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center animate-pulse mb-4">
+                        <FiLoader className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-400">Loading content...</p>
+                </div>
+            ) : (
                 <ProfileThreads 
                     threads={threads}
                     activeFilter={activeFilter}

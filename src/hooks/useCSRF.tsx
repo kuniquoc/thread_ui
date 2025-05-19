@@ -8,23 +8,23 @@ interface CSRFResponse {
     };
 }
 
+const CSRF_TOKEN_KEY = 'csrf_token';
+
 export const useCSRF = () => {
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchCSRFToken = async (): Promise<string | null> => {
-        // Check if the CSRF token is already set in the cookie
-        const cookieValue = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrfToken='))
-            ?.split('=')[1];
-        if (cookieValue) {
-            setToken(cookieValue);
-            return cookieValue;
+    const fetchCSRFToken = async (force: boolean = false): Promise<string | null> => {
+        // Check localStorage first if not force
+        if (!force) {
+            const storedToken = localStorage.getItem(CSRF_TOKEN_KEY);
+            if (storedToken) {
+                setToken(storedToken);
+                return storedToken;
+            }
         }
-        // If not, fetch a new CSRF token from the server
-        // and set it in the state and cookie
+        
         setLoading(true);
         setError(null);
         try {
@@ -40,11 +40,9 @@ export const useCSRF = () => {
                 throw new Error(result.status === 'error' ? result.data?.csrfToken : 'Failed to fetch CSRF token');
             }
             const csrfToken = result.data.csrfToken;
+            // Save to localStorage
+            localStorage.setItem(CSRF_TOKEN_KEY, csrfToken);
             setToken(csrfToken);
-
-            // Optionally, you can set the CSRF token in a cookie for future requests
-            document.cookie = `csrfToken=${csrfToken}; path=/; secure; SameSite=Strict`;
-
             return csrfToken;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch CSRF token');

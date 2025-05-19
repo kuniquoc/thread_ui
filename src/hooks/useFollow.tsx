@@ -7,6 +7,7 @@ import {
 } from '../types/FollowTypes';
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';
+import { useUser } from './useUser';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -15,19 +16,26 @@ export const useFollow = () => {
     const [error, setError] = useState<string | null>(null);
     const [follows, setFollows] = useState<Follow[]>([]);
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
+    const {user, getCurrentUser} = useUser();
 
     // Get following list
-    const getFollowingList = async (page: number = 1): Promise<FollowsResponse | null> => {
+    const getFollowingList = async (userId: number = 0, page: number = 1): Promise<FollowsResponse | null> => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
             }
 
-            const response = await fetch(`${API_URL}/follows/?page=${page}`, {
+            if (userId === 0) {
+                if (!user) {
+                    await getCurrentUser();
+                }
+                userId = user?.id || 0;
+            }
+
+            const response = await fetch(`${API_URL}/follows/?user_id=${userId}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -37,7 +45,7 @@ export const useFollow = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to fetch following list');
+                throw new Error(result.errors?.detail || 'Failed to fetch following list');
             }
             setFollows(result.results);
             return result;
@@ -54,7 +62,6 @@ export const useFollow = () => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -71,8 +78,17 @@ export const useFollow = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to follow/unfollow user');
+                throw new Error(result.errors?.detail || 'Failed to follow/unfollow user');
             }
+
+            // Update local follows state if needed
+            if (result.status === "Followed successfully") {
+                const newFollow: Follow = result;
+                setFollows(prev => [...prev, newFollow]);
+            } else {
+                setFollows(prev => prev.filter(follow => follow.followed.id !== data.followed_id));
+            }
+
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to follow/unfollow user');
@@ -87,7 +103,6 @@ export const useFollow = () => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -103,7 +118,7 @@ export const useFollow = () => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to fetch followers count');
+                throw new Error(result.errors?.detail || 'Failed to fetch followers count');
             }
             return result;
         } catch (err) {
@@ -114,12 +129,24 @@ export const useFollow = () => {
         }
     };
 
+    // Check if following a specific user
+    const isFollowing = (userId: number): boolean => {
+        return follows.some(follow => follow.followed.id === userId);
+    };
+
+    // Get total following count
+    const getFollowingCount = (): number => {
+        return follows.length;
+    };
+
     return {
         follows,
         loading,
         error,
         getFollowingList,
         followUser,
-        getFollowersCount
+        getFollowersCount,
+        isFollowing,
+        getFollowingCount
     };
 };

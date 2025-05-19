@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
     FiHeart,
     FiMessageCircle,
     // FiMoreHorizontal,
-    FiNavigation,
     FiRepeat,
 } from 'react-icons/fi';
 import BlueCheckmark from '/avatars/blue-checkmark.png';
@@ -12,6 +11,7 @@ import Reply from './Reply';
 import { useComment } from '../../hooks/useComment';
 import CommentInput from './CommentInput';
 import { formatDateTime } from '../../utils/dateUtils';
+import { usePusher } from '../../hooks/usePusher';
 
 // Define interface for the component props
 interface CommentProps {
@@ -42,7 +42,7 @@ const Comment = ({
     mentions,
     isLiked: initialIsLiked,
     pictures,
-    totalReplies = 0,
+    totalReplies: initialTotalReplies = 0,
     totalLikes: initialTotalLikes,
     isReposted,
     onReplySuccess,
@@ -53,8 +53,37 @@ const Comment = ({
     const [replies, setReplies] = useState<any[]>([]);
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
     const [showReplyForm, setShowReplyForm] = useState(false);
+    const [totalReplies, setTotalReplies] = useState(initialTotalReplies);
+    const [replyToUsername, setReplyToUsername] = useState<string | null>(null);
 
-    const { likeComment, getReplies, createComment, repostComment } = useComment();
+    const { likeComment, getReplies, createComment } = useComment();
+
+    const handlePusherEvent = useCallback((eventData: any) => {
+        const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+        
+        if (data.type === 'new_comment' && data.parent_comment_id === id) {
+            // Update reply count
+            setTotalReplies(data.comment_count);
+            
+            // If replies are currently shown, add the new reply
+            if (showReplies) {
+                const newReply = {
+                    id: data.comment_id,
+                    content: data.content,
+                    user: data.user_info,
+                    created_at: new Date().toISOString(),
+                    is_liked: false,
+                    likes_count: 0,
+                    thread_id: threadId
+                };
+
+                setReplies(prev => [newReply, ...prev]);
+            }
+        }
+    }, [id, threadId, showReplies]);
+
+    // Subscribe to Pusher channel for this thread
+    usePusher(`thread_${threadId}`, handlePusherEvent);
 
     const handleLike = async () => {
         try {
@@ -70,23 +99,6 @@ const Comment = ({
 
     const handleReply = () => {
         setShowReplyForm(!showReplyForm);
-    };
-
-    const handleRepost = async () => {
-        try {
-            const response = await repostComment(threadId, id);
-            if (response) {
-                // Handle repost success
-                console.log('Comment reposted successfully');
-            }
-        } catch (error) {
-            console.error('Failed to repost comment', error);
-        }
-    };
-
-    const handleShare = () => {
-        // Logic for sharing
-        console.log('Share comment', id);
     };
 
     const handleToggleReplies = async () => {
@@ -109,7 +121,7 @@ const Comment = ({
     const handleSubmitReply = async (content: string) => {
         try {
             const response = await createComment(threadId, {
-                content,
+                content: content, // Không thêm @username vì đã được thêm từ CommentInput
                 parent_comment_id: id
             });
 
@@ -136,6 +148,11 @@ const Comment = ({
         } catch (error) {
             console.error('Failed to submit reply', error);
         }
+    };
+
+    const handleReplyToReply = (username: string) => {
+        setReplyToUsername(username);
+        setShowReplyForm(true);
     };
 
     return (
@@ -198,7 +215,27 @@ const Comment = ({
                                     {mentions}
                                 </Link>
                             )}
-                            <div className="mt-2">{pictures}</div>
+                            {pictures && (
+                                <div className="mt-2">
+                                    <div className="flex flex-row gap-2 overflow-x-auto py-2">
+                                        {Array.isArray(pictures) && pictures.map((img: any, index: number) => (
+                                            <div key={index} className="relative flex-shrink-0">
+                                                <div className="w-[280px] aspect-[16/9] animate-pulse bg-gray-800/50 rounded-md overflow-hidden">
+                                                    <img
+                                                        src={img.image || img}
+                                                        alt={`Comment image ${index + 1}`}
+                                                        className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                                                        onLoad={(e) => {
+                                                            const target = e.target as HTMLImageElement;
+                                                            target.classList.remove('opacity-0');
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex gap-4 mt-3 sm:mt-4">
@@ -214,12 +251,6 @@ const Comment = ({
                             <button type="button" onClick={handleReply}>
                                 <FiMessageCircle className="text-gray-100 -rotate-90 sm:text-xl" />
                             </button>
-                            <button type="button" onClick={handleRepost}>
-                                <FiRepeat className="text-gray-100  -rotate-12 sm:text-xl" />
-                            </button>
-                            <button type="button" onClick={handleShare}>
-                                <FiNavigation className="text-gray-100 sm:text-xl" />
-                            </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
                             {totalReplies > 0 && (
@@ -233,36 +264,56 @@ const Comment = ({
                             {totalReplies > 0 && totalLikes > 0 && <span>.</span>}
                             {totalLikes > 0 && <p>{totalLikes} likes</p>}
                         </div>
-
-                        {showReplyForm && (
-                            <CommentInput
-                                avatar={avatar}
-                                onSubmit={(content) => handleSubmitReply(content)}
-                                placeholder="Post your reply"
-                            />
-                        )}
                     </div>
                 </div>
             </div>
 
-            {isLoadingReplies && <div className="ml-16 mt-2">Loading replies...</div>}
+            {isLoadingReplies && (
+                <div className="ml-16 mt-2 flex justify-center">
+                    <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                </div>
+            )}
 
-            {showReplies && replies.length > 0 && (
+            {showReplies && (
                 <div className="ml-16">
-                    {replies.map((reply) => (
-                        <Reply
-                            key={reply.id}
-                            id={reply.id}
-                            threadId={threadId}
-                            avatar={reply.user.avatar}
-                            username={reply.user.username}
-                            isVerified={reply.user.username.includes('verified')}
-                            content={reply.content}
-                            publishTime={reply.created_at}
-                            isLiked={reply.is_liked}
-                            totalLikes={reply.likes_count}
-                        />
-                    ))}
+                    {replies.length > 0 ? (
+                        replies.map((reply) => (
+                            <Reply
+                                key={reply.id}
+                                id={reply.id}
+                                threadId={threadId}
+                                avatar={reply.user.avatar}
+                                username={reply.user.username}
+                                isVerified={reply.user.username.includes('verified')}
+                                content={reply.content}
+                                publishTime={reply.created_at}
+                                isLiked={reply.is_liked}
+                                pictures={reply.pictures}
+                                totalLikes={reply.likes_count}
+                                isReposted={reply.is_reposted}
+                                onReplyClick={handleReplyToReply}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+                            <div className="w-10 h-10 bg-gray-800/50 rounded-full flex items-center justify-center mb-3">
+                                <FiMessageCircle className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <p className="text-gray-400 text-sm">No replies yet</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {showReplyForm && (
+                <div className="ml-16 mt-4">
+                    <CommentInput
+                        avatar={avatar}
+                        onSubmit={(content) => handleSubmitReply(content)}
+                        placeholder="Post your reply"
+                        initialMention={replyToUsername || username}
+                        autoFocus={true}
+                    />
                 </div>
             )}
         </div>
