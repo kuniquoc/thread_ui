@@ -7,6 +7,7 @@ import {
 } from '../types/FollowTypes';
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';
+import { useUser } from './useUser';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -15,9 +16,10 @@ export const useFollow = () => {
     const [error, setError] = useState<string | null>(null);
     const [follows, setFollows] = useState<Follow[]>([]);
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
+    const {user, getCurrentUser} = useUser();
 
     // Get following list
-    const getFollowingList = async (userId: number, page: number = 1): Promise<FollowsResponse | null> => {
+    const getFollowingList = async (userId: number = 0, page: number = 1): Promise<FollowsResponse | null> => {
         setLoading(true);
         setError(null);
         try {
@@ -26,7 +28,14 @@ export const useFollow = () => {
                 throw new Error('Failed to get CSRF token');
             }
 
-            const response = await fetch(`${API_URL}/follows/?page=${page}`, {
+            if (userId === 0) {
+                if (!user) {
+                    await getCurrentUser();
+                }
+                userId = user?.id || 0;
+            }
+
+            const response = await fetch(`${API_URL}/follows/?user_id=${userId}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
