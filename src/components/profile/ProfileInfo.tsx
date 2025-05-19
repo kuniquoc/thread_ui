@@ -431,8 +431,8 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
           </div>
           <div className="max-h-[60vh] overflow-y-auto py-2">
             {followersLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="w-8 h-8 rounded-full border-2 border-slate-700 border-t-emerald-600 animate-spin"></div>
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
               </div>
             ) : followers.length > 0 ? (
               <div className="flex flex-col">
@@ -455,9 +455,12 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-6 text-slate-400 text-center">
-                <FiUsers className="w-12 h-12 opacity-50 mb-4" />
-                <p>No followers yet</p>
+              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                  <FiUsers className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No followers yet</h3>
+                <p className="text-gray-400">Share your profile to start building your audience</p>
               </div>
             )}
           </div>

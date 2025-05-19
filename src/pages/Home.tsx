@@ -3,6 +3,7 @@ import PageWrapper from '../components/PageWrapper';
 import { useEffect, useState, useCallback } from 'react';
 import { useThread } from '../hooks/useThread';
 import { Thread } from '../types';
+import { FiMessageCircle, FiUser } from 'react-icons/fi';
 
 const Home = () => {
     const { getThreadFeed, getFollowingFeed, loading, error } = useThread();
@@ -123,8 +124,23 @@ const Home = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center p-8 text-gray-400 bg-gray-800/20 rounded-xl border border-gray-700/50">
-                                No threads found
+                            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                                <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                                    {feedType === 'all' ? (
+                                        <FiMessageCircle className="w-8 h-8 text-gray-400" />
+                                    ) : (
+                                        <FiUser className="w-8 h-8 text-gray-400" />
+                                    )}
+                                </div>
+                                <h3 className="text-lg font-semibold text-white mb-2">
+                                    {feedType === 'all' ? 'No threads yet' : 'No threads from people you follow'}
+                                </h3>
+                                <p className="text-gray-400">
+                                    {feedType === 'all' 
+                                        ? "Be the first to start a thread!"
+                                        : "Follow some people to see their threads here"
+                                    }
+                                </p>
                             </div>
                         )}
 

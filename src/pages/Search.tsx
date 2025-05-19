@@ -4,6 +4,7 @@ import SearchUserAccount from '../components/search/SearchUserAccount';
 import { useSearch } from '../hooks/useSearch';
 import { useFollow } from '../hooks/useFollow';
 import { useUser } from '../hooks/useUser';
+import { FiSearch } from 'react-icons/fi';
 
 const Search = () => {
     const [query, setQuery] = useState<string>('');
@@ -86,9 +87,19 @@ const Search = () => {
                         </div>
                     )}
 
-                    {!loading && !error && filteredResults.length === 0 && (
+                    {!loading && !error && query === '' && (
+                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                            <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                                <FiSearch className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">Search for people</h3>
+                            <p className="text-gray-400">Find and connect with others</p>
+                        </div>
+                    )}
+
+                    {!loading && !error && query !== '' && filteredResults.length === 0 && (
                         <div className="text-center p-8 text-gray-400 bg-gray-800/20 rounded-xl border border-gray-700/50">
-                            No users found
+                            No users found matching "{query}"
                         </div>
                     )}
 

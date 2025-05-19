@@ -78,7 +78,12 @@ const CommentInput = ({
                         disabled={!content.trim() || isSubmitting}
                         className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium disabled:opacity-50"
                     >
-                        {isSubmitting ? 'Posting...' : 'Post'}
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                                <span>Posting...</span>
+                            </div>
+                        ) : 'Post'}
                     </button>
                 </div>
             </form>

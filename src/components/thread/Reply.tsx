@@ -44,6 +44,7 @@ const Reply = ({
 	const [isLiked, setIsLiked] = useState(initialIsLiked);
 	const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
 	const { likeComment } = useComment();
+	const [loading, setLoading] = useState(false);
 
 	const handlePusherEvent = useCallback((eventData: any) => {
 		const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
@@ -62,6 +63,7 @@ const Reply = ({
 
 	const handleLike = async () => {
 		try {
+			setLoading(true);
 			const response = await likeComment(threadId, id);
 			if (response) {
 				setIsLiked(response.is_liked);
@@ -69,6 +71,8 @@ const Reply = ({
 			}
 		} catch (error) {
 			console.error('Failed to like/unlike reply', error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -126,9 +130,35 @@ const Reply = ({
 							<p className="text-xs sm:text-sm text-gray-200">
 								{content}
 							</p>
+							{pictures && (
+								<div className="mt-2">
+									<div className="flex flex-row gap-2 overflow-x-auto py-2">
+										{Array.isArray(pictures) && pictures.map((img: any, index: number) => (
+											<div key={index} className="relative flex-shrink-0">
+												<div className="w-[280px] aspect-[16/9] animate-pulse bg-gray-800/50 rounded-md overflow-hidden">
+													<img
+														src={img.image || img}
+														alt={`Reply image ${index + 1}`}
+														className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+														onLoad={(e) => {
+															const target = e.target as HTMLImageElement;
+															target.classList.remove('opacity-0');
+														}}
+													/>
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
 						</div>
-						<div className="mt-2">{pictures}</div>
 					</div>
+
+					{loading && (
+						<div className="flex justify-center my-2">
+							<div className="w-5 h-5 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+						</div>
+					)}
 
 					<div className="flex gap-4 mt-3 sm:mt-4">
 						<button type="button" onClick={handleLike}>

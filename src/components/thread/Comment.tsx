@@ -215,7 +215,27 @@ const Comment = ({
                                     {mentions}
                                 </Link>
                             )}
-                            <div className="mt-2">{pictures}</div>
+                            {pictures && (
+                                <div className="mt-2">
+                                    <div className="flex flex-row gap-2 overflow-x-auto py-2">
+                                        {Array.isArray(pictures) && pictures.map((img: any, index: number) => (
+                                            <div key={index} className="relative flex-shrink-0">
+                                                <div className="w-[280px] aspect-[16/9] animate-pulse bg-gray-800/50 rounded-md overflow-hidden">
+                                                    <img
+                                                        src={img.image || img}
+                                                        alt={`Comment image ${index + 1}`}
+                                                        className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                                                        onLoad={(e) => {
+                                                            const target = e.target as HTMLImageElement;
+                                                            target.classList.remove('opacity-0');
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex gap-4 mt-3 sm:mt-4">
@@ -248,27 +268,40 @@ const Comment = ({
                 </div>
             </div>
 
-            {isLoadingReplies && <div className="ml-16 mt-2">Loading replies...</div>}
+            {isLoadingReplies && (
+                <div className="ml-16 mt-2 flex justify-center">
+                    <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                </div>
+            )}
 
-            {showReplies && replies.length > 0 && (
+            {showReplies && (
                 <div className="ml-16">
-                    {replies.map((reply) => (
-                        <Reply
-                            key={reply.id}
-                            id={reply.id}
-                            threadId={threadId}
-                            avatar={reply.user.avatar}
-                            username={reply.user.username}
-                            isVerified={reply.user.username.includes('verified')}
-                            content={reply.content}
-                            publishTime={reply.created_at}
-                            isLiked={reply.is_liked}
-                            pictures={reply.pictures}
-                            totalLikes={reply.likes_count}
-                            isReposted={reply.is_reposted}
-                            onReplyClick={handleReplyToReply}
-                        />
-                    ))}
+                    {replies.length > 0 ? (
+                        replies.map((reply) => (
+                            <Reply
+                                key={reply.id}
+                                id={reply.id}
+                                threadId={threadId}
+                                avatar={reply.user.avatar}
+                                username={reply.user.username}
+                                isVerified={reply.user.username.includes('verified')}
+                                content={reply.content}
+                                publishTime={reply.created_at}
+                                isLiked={reply.is_liked}
+                                pictures={reply.pictures}
+                                totalLikes={reply.likes_count}
+                                isReposted={reply.is_reposted}
+                                onReplyClick={handleReplyToReply}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+                            <div className="w-10 h-10 bg-gray-800/50 rounded-full flex items-center justify-center mb-3">
+                                <FiMessageCircle className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <p className="text-gray-400 text-sm">No replies yet</p>
+                        </div>
+                    )}
                 </div>
             )}
 

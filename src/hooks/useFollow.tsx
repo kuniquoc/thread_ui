@@ -17,7 +17,7 @@ export const useFollow = () => {
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     // Get following list
-    const getFollowingList = async (page: number = 1): Promise<FollowsResponse | null> => {
+    const getFollowingList = async (userId: number, page: number = 1): Promise<FollowsResponse | null> => {
         setLoading(true);
         setError(null);
         try {

@@ -196,9 +196,9 @@ const Navigation = () => {
 					<Modal
 						show={props.openModal === 'default'}
 						onClose={() => props.setOpenModal(undefined)}
-						className="max-w-md"
+						className="max-w-4xl h-[600px] w-full"
 					>
-						<div className="relative rounded-xl h-[500px] w-[600px] bg-gradient-to-br from-gray-800 to-gray-900 text-white shadow-xl border border-gray-700">
+						<div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 text-white shadow-xl border border-gray-700 flex flex-col overflow-hidden">
 							<div className="border-b border-gray-700">
 								<div className="grid grid-cols-8 py-3 px-4">
 									<button
@@ -208,7 +208,7 @@ const Navigation = () => {
 									>
 										Cancel
 									</button>
-									<h1 className="col-span-7 text-center font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+									<h1 className=" col-span-7 text-center font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
 										New thread
 									</h1>
 									<button
@@ -222,9 +222,9 @@ const Navigation = () => {
 								</div>
 							</div>
 
-							<form className="space-y-6" action="#">
+							<form className="flex flex-col h-full max-h-[600px] min-h-0">
 								{errorMessage && (
-									<div className="px-4 pt-2 text-center">
+									<div className="px-4 pt-2">
 										<div className={`p-2 rounded-md ${
 											errorMessage.includes('saved') 
 												? 'bg-green-900/20 text-green-400' 
@@ -236,95 +236,110 @@ const Navigation = () => {
 									</div>
 								)}
 
-								<div className="px-4 py-6 flex w-full gap-2">
-									<div className="ml-2">
-										<div className="relative border-l-2 border-gray-700 border-opacity-70 ml-2">
-											<div className="flex -ml-7 flex-col w-14 h-28 max-h-28 justify-between items-center">
-												<div>
-													<img
-														src={user?.avatar}
-														width={35}
-														height={35}
-														alt="Account Avatar"
-														className="rounded-full border-2 border-gray-700"
-													/>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div className="flex w-full h-full">
-										<div className="space-y-6 w-full">
-											<div className="flex flex-col items-start">
-												<p className="text-sm text-gray-400">
-													@{user?.username}
-												</p>
-											</div>
-											<div className="w-full">
-												<textarea
-													name="post"
-													id="post"
-													className="w-full min-h-[120px] bg-transparent text-white border-none resize-none focus:ring-0 placeholder-gray-500 text-sm"
-													required
-													placeholder="Start a thread..."
-													value={threadContent}
-													onChange={(e) => setThreadContent(e.target.value)}
-												/>
-											</div>
-
-											{selectedFiles.length > 0 && (
-												<div className="mt-3">
-													<div className="flex gap-2 overflow-x-auto pb-2">
-														{selectedFiles.map((file, index) => (
-															<div key={index} className="relative group">
-																<img
-																	src={getFilePreview(file)}
-																	alt={`Preview ${index}`}
-																	className="w-24 h-24 object-cover rounded-xl border border-gray-700"
-																/>
-																<button
-																	type="button"
-																	onClick={() => removeSelectedFile(file)}
-																	className="absolute top-1 right-1 bg-gray-900/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-																	disabled={isUploading}
-																>
-																	<FiX className="w-4 h-4" />
-																</button>
-															</div>
-														))}
+								<div className="flex-1 px-4 py-4 overflow-y-auto min-h-0">
+									<div className="flex w-full gap-2">
+										<div className="ml-2">
+											<div className="relative border-l-2 border-gray-700 border-opacity-70 ml-2 h-full">
+												<div className="flex -ml-7 flex-col w-14 items-center">
+													<div>
+														<img
+															src={user?.avatar}
+															width={35}
+															height={35}
+															alt="Account Avatar"
+															className="rounded-full border-2 border-gray-700"
+														/>
 													</div>
 												</div>
-											)}
+											</div>
+										</div>
+										<div className="flex flex-col w-full min-w-0">
+											<div className="flex flex-col">
+												<div className="flex flex-col items-start">
+													<p className="text-sm text-gray-400">
+														@{user?.username}
+													</p>
+												</div>
+												<div className="w-full mt-4">
+													<textarea
+														name="post"
+														id="post"
+														className="w-full h-[200px] bg-transparent text-white border-none resize-none focus:ring-0 placeholder-gray-500 text-sm whitespace-pre-wrap"
+														required
+														placeholder="Start a thread..."
+														value={threadContent}
+														onChange={(e) => setThreadContent(e.target.value)}
+													/>
+												</div>
 
-											<div className="flex justify-between items-center">
-												<input
-													type="file"
-													ref={fileInputRef}
-													className="hidden"
-													onChange={handleFileChange}
-													multiple
-													accept="image/*"
-													disabled={isUploading}
-												/>
-												<button
-													type="button"
-													onClick={handleFileAttachment}
-													disabled={isUploading}
-													className="text-gray-400 hover:text-white transition-colors"
-												>
-													<FiPaperclip className="w-5 h-5" />
-												</button>
-
-												<button
-													type="button"
-													onClick={() => saveThread()}
-													disabled={!threadContent.trim() || loading || isUploading}
-													className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-full hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
-												>
-													{loading || isUploading ? 'Posting...' : 'Post'}
-												</button>
+												{selectedFiles.length > 0 && (
+													<div className="mt-3 w-full">
+														<div className="overflow-x-auto pb-4 hide-scrollbar">
+															<div className="flex flex-nowrap gap-2">
+																{selectedFiles.map((file, index) => (
+																	<div key={index} className="flex-none w-[280px]">
+																		<div className="relative aspect-video bg-gray-800/50 rounded-md overflow-hidden">
+																			<img
+																				src={getFilePreview(file)}
+																				alt={`Selected ${index + 1}`}
+																				className="w-full h-full object-contain bg-black/30"
+																				onLoad={(e) => {
+																					const target = e.target as HTMLImageElement;
+																					target.classList.remove('opacity-0');
+																				}}
+																			/>
+																			<button
+																				type="button"
+																				onClick={() => removeSelectedFile(file)}
+																				className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
+																				disabled={isUploading}
+																			>
+																				<FiX className="w-5 h-5" />
+																			</button>
+																		</div>
+																	</div>
+																))}
+															</div>
+														</div>
+													</div>
+												)}
 											</div>
 										</div>
 									</div>
+								</div>
+
+								<div className="border-t border-gray-700 px-4 py-3 flex justify-between items-center bg-gray-800/50">
+									<input
+										type="file"
+										ref={fileInputRef}
+										className="hidden"
+										onChange={handleFileChange}
+										multiple
+										accept="image/*"
+										disabled={isUploading}
+									/>
+									<button
+										type="button"
+										onClick={handleFileAttachment}
+										disabled={isUploading}
+										className="text-gray-400 hover:text-white transition-colors"
+									>
+										<FiPaperclip className="w-5 h-5" />
+									</button>
+
+									<button
+										type="button"
+										onClick={() => saveThread()}
+										disabled={!threadContent.trim() || loading || isUploading}
+										className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-full hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5"
+									>
+										{loading || isUploading ? (
+											<div className="flex items-center gap-2">
+												<div className="w-5 h-5 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+												<span>Posting...</span>
+											</div>
+										) : 'Post'}
+									</button>
 								</div>
 							</form>
 						</div>

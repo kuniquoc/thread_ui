@@ -1,4 +1,4 @@
-import { FiHeart, FiMessageCircle, FiUser } from 'react-icons/fi';
+// import { FiHeart, FiMessageCircle, FiUser } from 'react-icons/fi';
 import { Notification } from '../../types/NotificationTypes';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -8,14 +8,14 @@ interface NotificationItemProps {
 }
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
-    const getNotificationType = (content: string): 'like' | 'reply' | 'follow' => {
-        if (content.includes('liked')) return 'like';
-        if (content.includes('replied')) return 'reply';
-        if (content.includes('followed')) return 'follow';
-        return 'follow';
-    };
+    // const getNotificationType = (content: string): 'like' | 'reply' | 'follow' => {
+    //     if (content.includes('liked')) return 'like';
+    //     if (content.includes('replied')) return 'reply';
+    //     if (content.includes('followed')) return 'follow';
+    //     return 'follow';
+    // };
 
-    const notificationType = getNotificationType(notification.content);
+    // const notificationType = getNotificationType(notification.content);
     const formattedTime = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
 
     return (
@@ -33,7 +33,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                             height={40}
                             className="rounded-full border-2 border-gray-700"
                         />
-                        {notificationType === 'like' ? (
+                        {/* {notificationType === 'like' ? (
                             <div className="absolute -right-1 bottom-0 bg-gradient-to-r from-red-500 to-pink-500 p-1.5 rounded-full border-2 border-gray-900">
                                 <FiHeart className="fill-white text-white text-[10px]" />
                             </div>
@@ -45,7 +45,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                             <div className="absolute -right-1 bottom-0 bg-gradient-to-r from-purple-500 to-pink-500 p-1.5 rounded-full border-2 border-gray-900">
                                 <FiUser className="fill-white text-white text-[10px]" />
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -64,13 +64,13 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                 </div>
             </div>
 
-            {notificationType === 'follow' && (
+            {/* {notificationType === 'follow' && (
                 <div className="mt-3 flex justify-end">
                     <button className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-full hover:from-blue-500 hover:to-purple-500 transition-all duration-300 transform hover:-translate-y-0.5">
                         Follow back
                     </button>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };
