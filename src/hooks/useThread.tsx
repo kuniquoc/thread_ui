@@ -8,7 +8,7 @@ import {
     RepostThreadResponse,
     Comment,
     CommentListResponse,
-    LikeCommentResponse
+    LikeCommentResponse,
 } from '../types';
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';

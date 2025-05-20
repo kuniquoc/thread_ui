@@ -24,6 +24,12 @@ export interface Thread {
     parent_id?: number;
 }
 
+// Response for user threads endpoint
+export interface UserThreadsParams {
+    user_id: number;
+    page?: number;
+}
+
 export interface ThreadsListResponse {
     count: number;
     next: string | null;
@@ -46,23 +52,3 @@ export interface RepostThreadResponse {
     reposts_count: number;
     is_reposted: boolean;
 }
-
-// export interface Comment {
-//     id: number;
-//     content: string;
-//     user: Thread['user'];
-//     created_at: string;
-//     likes_count: number;
-//     is_liked: boolean;
-//     replies_count: number;
-// }
-
-// export interface CreateCommentRequest {
-//     content: string;
-//     parent_comment_id?: number | null;
-// }
-
-// export interface LikeCommentResponse {
-//     likes_count: number;
-//     is_liked: boolean;
-//}

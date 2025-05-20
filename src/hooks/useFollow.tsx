@@ -3,7 +3,10 @@ import {
     Follow,
     FollowsResponse,
     FollowRequest,
-    FollowersCountResponse
+    FollowersCountResponse,
+    UserFollowsCountResponse,
+    FollowStatusResponse,
+    UserFollowersResponse
 } from '../types/FollowTypes';
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';
@@ -39,7 +42,7 @@ export const useFollow = () => {
                 queryUserId = user.id;
             }
 
-            const response = await fetch(`${API_URL}/follows/followers/?user_id=${queryUserId}&page=${page}`, {
+            const response = await fetch(`${API_URL}/follows/?user_id=${queryUserId}&page=${page}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -133,12 +136,105 @@ export const useFollow = () => {
         }
     };
 
-    // Check if following a specific user
+    // Get user follows count
+    const getUserFollowsCount = async (userId: number): Promise<UserFollowsCountResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/follows/user_follows_count/?user_id=${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.errors?.detail || 'Failed to fetch user follows count');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch user follows count');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Check follow status
+    const checkFollowStatus = async (userId: number): Promise<FollowStatusResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/follows/check_status/?user_id=${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.errors?.detail || 'Failed to check follow status');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to check follow status');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get followers of a user
+    const getUserFollowers = async (userId: number, page: number = 1): Promise<UserFollowersResponse | null> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = csrfToken || await fetchCSRFToken();
+            if (!token) {
+                throw new Error('Failed to get CSRF token');
+            }
+
+            const response = await fetch(`${API_URL}/follows/followers/?user_id=${userId}&page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTOKEN': token
+                },
+                credentials: 'include',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.errors?.detail || 'Failed to fetch user followers');
+            }
+            return result;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch user followers');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Check if following a specific user locally (from follows state)
     const isFollowing = (userId: number): boolean => {
         return follows.some(follow => follow.followed.id === userId);
     };
 
-    // Get total following count
+    // Get total following count locally (from follows state)
     const getFollowingCount = (): number => {
         return follows.length;
     };
@@ -150,7 +246,10 @@ export const useFollow = () => {
         getFollowingList,
         followUser,
         getFollowersCount,
+        getUserFollowsCount,
+        checkFollowStatus,
+        getUserFollowers,
         isFollowing,
-        getFollowingCount
+        getFollowingCount,
     };
 };

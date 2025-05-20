@@ -7,6 +7,7 @@ import {
     FiTrash2,
     FiX,
 } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 import cn from 'classnames';
 import { Thread } from '../../types/ThreadTypes';
@@ -33,6 +34,8 @@ const ThreadComponent = ({
     is_reposted: initialIsReposted,
     comment_count: initialCommentCount,
 }: ThreadComponentProps) => {
+    const navigate = useNavigate();
+
     // State for handling UI interactions
     const [showComments, setShowComments] = useState(false);
     const [showCommentInput, setShowCommentInput] = useState(false);
@@ -187,6 +190,15 @@ const ThreadComponent = ({
         setSelectedImage(null);
     };
 
+    const handleProfileClick = (userId: number) => {
+        // Redirect to profile page if it's current user, otherwise go to user detail page
+        if (currentUser && currentUser.id === userId) {
+            navigate('/profile');
+        } else {
+            navigate(`/user/${userId}`);
+        }
+    };
+
     // Add event listener to close image viewer on Escape key press
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -262,7 +274,8 @@ const ThreadComponent = ({
                                 width={35}
                                 height={35}
                                 alt="Account Avatar"
-                                className="rounded-full"
+                                className="rounded-full cursor-pointer"
+                                onClick={() => handleProfileClick(user.id)}
                             />
                         </div>
                     </div>
@@ -280,7 +293,6 @@ const ThreadComponent = ({
                             </span>
 
                             {currentUser && currentUser.id === user.id && (
-                                console.log('currentUser', currentUser.id, user.id),
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirmation(true)}
@@ -418,6 +430,7 @@ const ThreadComponent = ({
                                             threadId={id}
                                             avatar={comment.user.avatar}
                                             username={comment.user.username}
+                                            userId={comment.user.id}
                                             isVerified={comment.user.username.includes('verified')}
                                             content={comment.content}
                                             publishTime={comment.created_at}

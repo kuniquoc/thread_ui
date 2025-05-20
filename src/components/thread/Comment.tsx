@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     FiHeart,
     FiMessageCircle,
@@ -19,6 +19,7 @@ interface CommentProps {
     threadId: number;
     avatar: string;
     username: string;
+    userId: number; // Add this new prop
     isVerified: boolean;
     content: string;
     publishTime: string;
@@ -36,6 +37,7 @@ const Comment = ({
     threadId,
     avatar,
     username,
+    userId,
     isVerified,
     content,
     publishTime,
@@ -47,6 +49,7 @@ const Comment = ({
     isReposted,
     onReplySuccess,
 }: CommentProps) => {
+    const navigate = useNavigate();
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
     const [showReplies, setShowReplies] = useState(false);
@@ -155,6 +158,15 @@ const Comment = ({
         setShowReplyForm(true);
     };
 
+    const handleProfileClick = () => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUser && currentUser.id === userId) {
+            navigate('/profile');
+        } else {
+            navigate(`/user/${userId}`);
+        }
+    };
+
     return (
         <div className="px-4 my-4 font-sans">
             {isReposted && (
@@ -172,7 +184,8 @@ const Comment = ({
                                 width={40}
                                 height={40}
                                 alt="Account Avatar"
-                                className="rounded-full"
+                                className="rounded-full cursor-pointer"
+                                onClick={handleProfileClick}
                             />
                         </div>
                     </div>
@@ -284,6 +297,7 @@ const Comment = ({
                                 threadId={threadId}
                                 avatar={reply.user.avatar}
                                 username={reply.user.username}
+                                userId={reply.user.id}
                                 isVerified={reply.user.username.includes('verified')}
                                 content={reply.content}
                                 publishTime={reply.created_at}

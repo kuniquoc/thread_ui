@@ -4,31 +4,28 @@ import SearchUserAccount from '../components/search/SearchUserAccount';
 import { useSearch } from '../hooks/useSearch';
 import { useFollow } from '../hooks/useFollow';
 import { useUser } from '../hooks/useUser';
-import { FiSearch } from 'react-icons/fi';
 import { useScroll } from '../hooks/useScroll';
+import { User } from '../types';
 
 const Search = () => {
     const [query, setQuery] = useState<string>('');
     const [page, setPage] = useState<number>(1);
-    const { results, loading, error, pagination, searchUsers, loadMore } = useSearch();
-    const { followUser, isFollowing } = useFollow();
+    const { searchResults, loading, error, searchUsers, loadMore } = useSearch();
+    const { followUser } = useFollow();
     const { user: currentUser, getCurrentUser } = useUser();
     const isVisible = useScroll();
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setQuery(e.target.value);
-    };
-
-    const handleFollow = async (userId: number) => {
-        await followUser({ followed_id: userId });
+        const newQuery = e.target.value;
+        setQuery(newQuery);
+        setPage(1);
+        searchUsers(newQuery);
     };
 
     const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPage(1);
-        if (query.trim()) {
-            searchUsers(query);
-        }
+        searchUsers(query);
     };
 
     useEffect(() => {
@@ -43,12 +40,20 @@ const Search = () => {
     }, []);
 
     const handleLoadMore = () => {
-        if (pagination?.next && !loading) {
-            loadMore(pagination.next);
+        if (searchResults?.next && !loading) {
+            loadMore(searchResults.next);
         }
     };
 
-    const filteredResults = results.filter(user => user.id !== currentUser?.id);
+    const handleFollow = async (userId: number) => {
+        const result = await followUser({ followed_id: userId });
+        if (result) {
+            // Force refresh the search results to update the follow status
+            searchUsers(query);
+        }
+    };
+
+    const filteredResults = (searchResults?.results || []).filter((user: User) => user.id !== currentUser?.id);
 
     return (
         <div className="min-h-screen flex flex-col items-center">
@@ -84,24 +89,14 @@ const Search = () => {
                     </div>
 
                     {loading && page === 1 && (
-                        <div className="flex justify-center p-4">
-                            <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                        <div className="flex justify-center p-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                         </div>
                     )}
 
                     {error && (
-                        <div className="text-center p-4 text-red-400 bg-red-900/20 rounded-lg border border-red-800">
+                        <div className="text-red-500 text-center p-4">
                             {error}
-                        </div>
-                    )}
-
-                    {!loading && !error && query === '' && (
-                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                            <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
-                                <FiSearch className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-white mb-2">Search for people</h3>
-                            <p className="text-gray-400">Find and connect with others</p>
                         </div>
                     )}
 
@@ -111,12 +106,12 @@ const Search = () => {
                         </div>
                     )}
 
-                    {filteredResults.map((user, index) => (
+                    {filteredResults.map((user: User, index: number) => (
                         <div key={user.id} className="w-full">
                             <div className="bg-gray-800/30 rounded-xl p-4 hover:bg-gray-800/50 transition-all duration-200">
                                 <SearchUserAccount
                                     user={user}
-                                    isFollowing={isFollowing(user.id)}
+                                    isFollowing={user.is_followed}
                                     onFollow={() => handleFollow(user.id)}
                                 />
                             </div>
@@ -128,24 +123,18 @@ const Search = () => {
 
                     {loading && page > 1 && (
                         <div className="flex justify-center p-4">
-                            <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                         </div>
                     )}
 
-                    {pagination?.next && !loading && (
-                        <div className="flex justify-center mt-6">
+                    {searchResults?.next && !loading && (
+                        <div className="flex justify-center pt-4">
                             <button
                                 onClick={handleLoadMore}
-                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-medium text-sm hover:from-blue-500 hover:to-purple-500 transition-all duration-300 transform hover:-translate-y-0.5"
+                                className="px-6 py-2 bg-gray-800/50 hover:bg-gray-800/70 text-white rounded-full transition-all duration-200"
                             >
                                 Load more
                             </button>
-                        </div>
-                    )}
-
-                    {!pagination?.next && filteredResults.length > 0 && (
-                        <div className="text-center p-4 text-gray-500">
-                            You've reached the end
                         </div>
                     )}
                 </div>
