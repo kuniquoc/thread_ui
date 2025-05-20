@@ -13,6 +13,11 @@ export interface UserLoginRequest {
     password: string;
 }
 
+export interface ForgotPasswordRequest {
+    email: string;
+    username: string;
+}
+
 export interface UserUpdateRequest {
     email?: string;
     first_name?: string;

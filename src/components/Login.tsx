@@ -47,6 +47,11 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             className="bg-gray-700/50"
                         />
+                        <div className="text-right">
+                            <Link to="/forgot-password" className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-300 hover:to-purple-400 transition-all duration-300">
+                                Forgot your password?
+                            </Link>
+                        </div>
                     </div>
 
                     {error && (

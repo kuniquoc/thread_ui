@@ -18,6 +18,7 @@ import { useUser } from '../../hooks/useUser';
 import Comment from './Comment';
 import CommentInput from './CommentInput';
 import { formatDateTime } from '../../utils/dateUtils';
+import Modal from '../common/Modal';
 
 // Define the type for the component's props
 type ThreadComponentProps = Omit<Thread, 'comments'>;
@@ -43,6 +44,7 @@ const ThreadComponent = ({
     const [isLoadingComments, setIsLoadingComments] = useState(false);
     const [commentCount, setCommentCount] = useState(initialCommentCount);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [mouseY, setMouseY] = useState(0);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { user: currentUser, getCurrentUser } = useUser();
 
@@ -199,6 +201,11 @@ const ThreadComponent = ({
         }
     };
 
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        setMouseY(e.pageY);
+        setShowDeleteConfirmation(true);
+    };
+
     // Add event listener to close image viewer on Escape key press
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -295,7 +302,7 @@ const ThreadComponent = ({
                             {currentUser && currentUser.id === user.id && (
                                 <button
                                     type="button"
-                                    onClick={() => setShowDeleteConfirmation(true)}
+                                    onClick={handleDeleteClick}
                                     className="text-gray-400 hover:text-red-500 transition-colors"
                                 >
                                     <FiTrash2 className="w-4 h-4" />
@@ -306,9 +313,12 @@ const ThreadComponent = ({
 
                     {/* Delete confirmation modal */}
                     {showDeleteConfirmation && (
-                        <div className="fixed inset-0 flex items-center justify-center z-50">
-                            <div className="absolute inset-0 bg-black opacity-50"></div>
-                            <div className="bg-gray-800 rounded-lg p-6 z-10 max-w-sm w-full mx-4">
+                        <Modal 
+                            show={true} 
+                            onClose={() => setShowDeleteConfirmation(false)}
+                            mouseY={mouseY}
+                        >
+                            <div className="bg-gray-800 p-6">
                                 <h3 className="text-lg font-medium text-white mb-4">Delete Thread?</h3>
                                 <p className="text-gray-300 mb-6">This action cannot be undone. Are you sure you want to delete this thread?</p>
                                 <div className="flex justify-end gap-3">
@@ -328,7 +338,7 @@ const ThreadComponent = ({
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </Modal>
                     )}
 
                     <div className="break-words overflow-hidden">
