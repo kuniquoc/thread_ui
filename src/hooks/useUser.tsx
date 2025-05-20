@@ -43,12 +43,19 @@ export const useUser = () => {
             if (!response.ok) {
                 throw new Error(result.message || 'Failed to get user info');
             }
-            setUser(result.data);
 
-            // Optionally, you can set the user in local storage or context
-            localStorage.setItem('user', JSON.stringify(result.data));
+            // Add is_followed property to API response
+            const userData = {
+                ...result.data,
+                is_followed: false // Since this is current user, we set is_followed to false
+            };
 
-            return result.data;
+            setUser(userData);
+
+            // Store in localStorage with is_followed property
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            return userData;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to get user info');
             return null;

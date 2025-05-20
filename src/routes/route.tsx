@@ -6,6 +6,7 @@ import Notification from '../pages/Notification';
 import Profile from '../pages/Profile';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import UserDetailView from '../pages/UserDetailView';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
                     {
                         path: '/profile',
                         element: <Profile />
+                    },
+                    {
+                        path: '/user/:userId',
+                        element: <UserDetailView />
                     }
                 ]
             }

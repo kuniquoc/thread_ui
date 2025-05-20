@@ -30,3 +30,29 @@ export interface FollowRequest {
 export interface FollowersCountResponse {
     count: number;
 }
+
+export interface UserFollowsCountResponse {
+    followers_count: number;
+    following_count: number;
+}
+
+export interface UserFollower {
+    id: number;
+    username: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar: string | null;
+    is_followed: boolean;
+}
+
+export interface UserFollowersResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: UserFollower[];
+}
+
+export interface FollowStatusResponse {
+    is_followed: boolean;
+}

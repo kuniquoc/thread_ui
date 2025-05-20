@@ -35,5 +35,6 @@ export interface UserResponse {
     last_name: string;
     date_joined: string;
     avatar: string;
+    is_followed: boolean;
 }
 
