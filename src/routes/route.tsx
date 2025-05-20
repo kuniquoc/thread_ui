@@ -6,6 +6,7 @@ import Notification from '../pages/Notification';
 import Profile from '../pages/Profile';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import UserDetailView from '../pages/UserDetailView';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
@@ -21,6 +22,10 @@ export const router = createBrowserRouter([
             {
                 path: '/register',
                 element: <RegisterPage />
+            },
+            {
+                path: '/forgot-password',
+                element: <ForgotPasswordPage />
             },
             {
                 element: <ProtectedRoute />,
