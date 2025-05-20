@@ -272,10 +272,11 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
     }
   }
 
-  const handleUserClick = (userId: number) => {
-    const { getCurrentUser } = useUser();
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    if (currentUser && currentUser.id === userId) {
+  const handleUserClick = async (userId: number) => {
+    const {user, getCurrentUser } = useUser();
+    await getCurrentUser();
+
+    if (user && user.id === userId) {
       navigate('/profile');
     } else {
       navigate(`/user/${userId}`);

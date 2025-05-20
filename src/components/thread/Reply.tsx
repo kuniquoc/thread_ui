@@ -34,7 +34,6 @@ const Reply = ({
 	avatar,
 	username,
 	userId,
-	isVerified,
 	isRepliedTo,
 	repliedToUsername = 'realstoman',
 	content,
