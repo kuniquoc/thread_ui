@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
     FiHeart,
     FiMessageCircle,
@@ -36,6 +36,7 @@ const ThreadComponent = ({
     comment_count: initialCommentCount,
 }: ThreadComponentProps) => {
     const navigate = useNavigate();
+    const commentsLoadedRef = useRef(false);
 
     // State for handling UI interactions
     const [showComments, setShowComments] = useState(false);
@@ -48,21 +49,13 @@ const ThreadComponent = ({
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { user: currentUser, getCurrentUser } = useUser();
 
-    // Get the current user from the context
-    useEffect(() => {
-        if (!currentUser) {
-            getCurrentUser();
-        }
-    }, []);
-
-    // Add notification state
-    const [showRepostNotification, setShowRepostNotification] = useState(false);
-
     // State for tracking likes and reposts
     const [likesCount, setLikesCount] = useState(initialLikesCount);
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [repostsCount, setRepostsCount] = useState(initialRepostsCount);
     const [isReposted, setIsReposted] = useState(initialIsReposted);
+    const [showRepostNotification, setShowRepostNotification] = useState(false);
+
     // Format the created_at string
     const formattedDateTime = formatDateTime(created_at);
 
@@ -70,13 +63,25 @@ const ThreadComponent = ({
     const { likeThread, repostThread, deleteThread } = useThread();
     const { getComments, createComment } = useComment();
 
+    // Get the current user from the context
+    useEffect(() => {
+        if (!currentUser) {
+            getCurrentUser();
+        }
+    }, []);
+
     const handleCommentClick = async () => {
-        if (!showComments) {
+        setShowComments(!showComments);
+        setShowCommentInput(!showCommentInput);
+        
+        // Only load comments the first time they're requested
+        if (!showComments && !commentsLoadedRef.current) {
             setIsLoadingComments(true);
             try {
                 const response = await getComments(id);
                 if (response) {
                     setLoadedComments(response.results);
+                    commentsLoadedRef.current = true;
                 }
             } catch (error) {
                 console.error('Failed to load comments', error);
@@ -84,8 +89,6 @@ const ThreadComponent = ({
                 setIsLoadingComments(false);
             }
         }
-        setShowComments(!showComments);
-        setShowCommentInput(!showCommentInput);
     };
 
     const handleLike = async () => {
@@ -147,29 +150,39 @@ const ThreadComponent = ({
         }
     };
 
-    const handlePusherEvent = useCallback((eventData: any) => {
-        if (eventData.type === 'new_comment') {
-            // Update comment count
-            setCommentCount(eventData.comment_count);
+    const handlePusherEvent = useCallback(async (data: any) => {
+        console.log('Received Pusher message:', data);
+        if (data.thread_id !== id) return;
 
-            // If this is a new comment and comments are currently shown, add it to the list
-            if (!eventData.is_reply && showComments) {
-                const newComment = {
-                    id: eventData.comment_id,
-                    content: eventData.content,
-                    user: eventData.user_info,
-                    created_at: new Date().toISOString(), // Use current time as created_at
-                    is_liked: false,
-                    likes_count: 0,
-                    replies_count: 0,
-                    is_reposted: false
-                };
-
-                // Add new comment to the beginning of the list
-                setLoadedComments(prev => [newComment, ...prev]);
+        // Handle thread like update
+        if (data.type === 'like_update') {
+            console.log('Received like update:', data.likes_count);
+            setLikesCount(data.likes_count);
+        } 
+        // Handle comment updates
+        else if (data.type === 'new_comment') {
+            console.log('Received new comment:', data);
+            setCommentCount(data.comment_count);
+            
+            // Load latest comments whenever there's a new comment, regardless of whether comments are shown
+            try {
+                const response = await getComments(id);
+                if (response) {
+                    setLoadedComments(response.results);
+                    commentsLoadedRef.current = true;
+                }
+            } catch (error) {
+                console.error('Failed to load comments', error);
             }
         }
-    }, [showComments]);
+        else if (data.type === 'comment_deleted') {
+            console.log('Received comment deletion:', data);
+            setCommentCount(prev => prev - 1);
+            if (showComments && commentsLoadedRef.current) {
+                setLoadedComments(prev => prev.filter(comment => comment.id !== data.comment_id));
+            }
+        }
+    }, [id, showComments, getComments]);
 
     const handleDelete = async () => {
         try {
@@ -400,18 +413,18 @@ const ThreadComponent = ({
                             )}
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
-                            {commentCount > 0 ? (
+                            {commentCount > 0 && (
                                 <button
                                     className="text-blue-400 hover:underline"
                                     onClick={handleCommentClick}
                                 >
                                     {showComments ? "Hide replies" : `${commentCount} replies`}
                                 </button>
-                            ) : ''}
-                            {commentCount > 0 && (likesCount > 0 || repostsCount > 0) ? <span>.</span> : ''}
-                            {likesCount > 0 ? <p>{likesCount} likes</p> : ''}
-                            {likesCount > 0 && repostsCount > 0 ? <span>.</span> : ''}
-                            {repostsCount > 0 ? <p>{repostsCount} reposts</p> : ''}
+                            )}
+                            {commentCount > 0 && (likesCount >= 0 || repostsCount >= 0) && <span>.</span>}
+                            <p>{likesCount} likes</p>
+                            {likesCount >= 0 && repostsCount >= 0 && <span>.</span>}
+                            {repostsCount >= 0 && <p>{repostsCount} reposts</p>}
                         </div>
 
                         {/* Comment input section - replaced with CommentInput component */}
@@ -441,7 +454,6 @@ const ThreadComponent = ({
                                             avatar={comment.user.avatar}
                                             username={comment.user.username}
                                             userId={comment.user.id}
-                                            isVerified={comment.user.username.includes('verified')}
                                             content={comment.content}
                                             publishTime={comment.created_at}
                                             isLiked={comment.is_liked}

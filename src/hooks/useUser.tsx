@@ -8,20 +8,32 @@ const API_URL = `${API_BASE_URL}/api`;
 export const useUser = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [user, setUser] = useState<UserResponse | null>(null);
-    const { token: csrfToken, fetchCSRFToken } = useCSRF();
-
-    const getCurrentUser = async (): Promise<UserResponse | null> => {
-        // Check if the user is already set in the state
+    const [user, setUser] = useState<UserResponse | null>(() => {
         const localUser = localStorage.getItem('user');
         if (localUser) {
-            const parsedUser = JSON.parse(localUser);
-            setUser(parsedUser);
-            return parsedUser;
+            return JSON.parse(localUser);
+        }
+        return null;
+    });
+    const { token: csrfToken, fetchCSRFToken } = useCSRF();
+
+    const getCurrentUser = async (forceRefresh: boolean = false): Promise<UserResponse | null> => {
+        // Return cached user if available and not forcing refresh
+        if (!forceRefresh && user) {
+            return user;
+        }
+
+        // Return localStorage user if available and not forcing refresh
+        if (!forceRefresh) {
+            const localUser = localStorage.getItem('user');
+            if (localUser) {
+                const parsedUser = JSON.parse(localUser);
+                setUser(parsedUser);
+                return parsedUser;
+            }
         }
         
-        // If not, fetch the user info from the server
-        // and set it in the state
+        // Fetch user info from the server
         setLoading(true);
         setError(null);
         try {
@@ -51,10 +63,7 @@ export const useUser = () => {
             };
 
             setUser(userData);
-
-            // Store in localStorage with is_followed property
             localStorage.setItem('user', JSON.stringify(userData));
-
             return userData;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to get user info');
