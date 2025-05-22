@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     FiHeart,
@@ -6,7 +6,6 @@ import {
     // FiMoreHorizontal,
     FiRepeat,
 } from 'react-icons/fi';
-import BlueCheckmark from '/avatars/blue-checkmark.png';
 import Reply from './Reply';
 import { useComment } from '../../hooks/useComment';
 import CommentInput from './CommentInput';
@@ -20,7 +19,6 @@ interface CommentProps {
     avatar: string;
     username: string;
     userId: number; // Add this new prop
-    isVerified: boolean;
     content: string;
     publishTime: string;
     mentions?: string;
@@ -38,7 +36,6 @@ const Comment = ({
     avatar,
     username,
     userId,
-    isVerified,
     content,
     publishTime,
     mentions,
@@ -50,6 +47,7 @@ const Comment = ({
     onReplySuccess,
 }: CommentProps) => {
     const navigate = useNavigate();
+    const repliesLoadedRef = useRef(false);
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [totalLikes, setTotalLikes] = useState(initialTotalLikes);
     const [showReplies, setShowReplies] = useState(false);
@@ -61,29 +59,35 @@ const Comment = ({
 
     const { likeComment, getReplies, createComment } = useComment();
 
-    const handlePusherEvent = useCallback((eventData: any) => {
-        const data = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
-        
-        if (data.type === 'new_comment' && data.parent_comment_id === id) {
-            // Update reply count
+    const handlePusherEvent = async (data: any) => {
+        console.log('Received Pusher message on Comment:', data);
+        console.log('Comment ID:', id);
+        console.log('Thread ID:', threadId);
+        console.log('Data:', data.comment_id);
+
+        // Handle comment like update
+        if (data.type === 'comment_like_update' && data.comment_id === id) {
+            console.log('Received like update:', data.likes_count);
+            setTotalLikes(data.likes_count);
+        } 
+        // Handle reply updates
+        else if (data.type === 'reply_comment' && data.parent_comment_id === id) {
+            console.log('Received new reply:', data);
             setTotalReplies(data.comment_count);
             
-            // If replies are currently shown, add the new reply
-            if (showReplies) {
-                const newReply = {
-                    id: data.comment_id,
-                    content: data.content,
-                    user: data.user_info,
-                    created_at: new Date().toISOString(),
-                    is_liked: false,
-                    likes_count: 0,
-                    thread_id: threadId
-                };
-
-                setReplies(prev => [newReply, ...prev]);
+            // Load latest replies if they have been loaded before
+            if (repliesLoadedRef.current) {
+                try {
+                    const response = await getReplies(threadId, id);
+                    if (response) {
+                        setReplies(response);
+                    }
+                } catch (error) {
+                    console.error('Failed to load replies', error);
+                }
             }
         }
-    }, [id, threadId, showReplies]);
+    };
 
     // Subscribe to Pusher channel for this thread
     usePusher(`thread_${threadId}`, handlePusherEvent);
@@ -105,12 +109,13 @@ const Comment = ({
     };
 
     const handleToggleReplies = async () => {
-        if (!showReplies && replies.length === 0) {
+        if (!showReplies && !repliesLoadedRef.current) {
             setIsLoadingReplies(true);
             try {
                 const repliesData = await getReplies(threadId, id);
                 if (repliesData) {
                     setReplies(repliesData);
+                    repliesLoadedRef.current = true;
                 }
             } catch (error) {
                 console.error('Failed to fetch replies', error);
@@ -197,15 +202,6 @@ const Comment = ({
                                 <p className="text-md sm:text-lg font-medium">
                                     {username}
                                 </p>
-                                {isVerified && (
-                                    <img
-                                        src={BlueCheckmark}
-                                        width={14}
-                                        height={14}
-                                        alt="Blue Checkmark"
-                                        className="rounded-full w-4 sm:w-5"
-                                    />
-                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -266,7 +262,7 @@ const Comment = ({
                             </button>
                         </div>
                         <div className="flex items-start gap-2 text-gray-500 mt-4 text-xs sm:text-[14px] text-center">
-                            {totalReplies > 0 && (
+                            {totalReplies >= 0 && (
                                 <button
                                     className="text-blue-400 hover:underline"
                                     onClick={handleToggleReplies}
@@ -274,8 +270,8 @@ const Comment = ({
                                     {showReplies ? "Hide replies" : `${totalReplies} replies`}
                                 </button>
                             )}
-                            {totalReplies > 0 && totalLikes > 0 && <span>.</span>}
-                            {totalLikes > 0 && <p>{totalLikes} likes</p>}
+                            {totalReplies >= 0 && totalLikes >= 0 && <span>.</span>}
+                            <p>{totalLikes} likes</p>
                         </div>
                     </div>
                 </div>

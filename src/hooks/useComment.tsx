@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import {
-    Comment,
+    CommentTypes,
     CommentsResponse,
     RepliesResponse,
     CreateCommentRequest,
@@ -17,7 +17,7 @@ const API_URL = `${API_BASE_URL}/api`;
 export const useComment = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [comments, setComments] = useState<Comment[]>([]);
+    const [comments, setComments] = useState<CommentTypes[]>([]);
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     // Get comments for a thread

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-    Comment,
+    CommentTypes,
     RepliesResponse,
     CreateCommentRequest,
     CreateCommentResponse,
@@ -14,7 +14,7 @@ const API_URL = `${API_BASE_URL}/api`;
 export const useReply = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [replies, setReplies] = useState<Comment[]>([]);
+    const [replies, setReplies] = useState<CommentTypes[]>([]);
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
 
     // Get replies for a comment

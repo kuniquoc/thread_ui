@@ -8,7 +8,7 @@ export interface CommentUser {
     date_joined: string;
 }
 
-export interface Comment {
+export interface CommentTypes {
     id: number;
     content: string;
     user: CommentUser;

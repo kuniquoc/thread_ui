@@ -63,9 +63,9 @@ const Navigation = () => {
 			}
 		};
 		fetchUnreadCount();
-		const interval = setInterval(fetchUnreadCount, 30000);
+		const interval = setInterval(fetchUnreadCount, 10000);
 		return () => clearInterval(interval);
-	}, []);
+	}, [activeTab]);
 
 	const handleLogout = async () => {
 		await logout();
