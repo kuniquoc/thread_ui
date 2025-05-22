@@ -6,7 +6,7 @@ import {
     CreateCommentRequest,
     LikeThreadResponse,
     RepostThreadResponse,
-    Comment,
+    CommentTypes,
     CommentListResponse,
     LikeCommentResponse,
 } from '../types';
@@ -237,7 +237,7 @@ export const useThread = () => {
     };
 
     // Create a comment
-    const createComment = async (threadId: number, data: CreateCommentRequest): Promise<Comment | null> => {
+    const createComment = async (threadId: number, data: CreateCommentRequest): Promise<CommentTypes | null> => {
         setLoading(true);
         setError(null);
         try {
