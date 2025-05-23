@@ -127,7 +127,7 @@ const Avatar = ({
 export default function ProfileInfo({ user }: ProfileInfoProps) {
   const navigate = useNavigate()
   const [openModal, setOpenModal] = useState<string | undefined>()
-  const { updateProfile, changePassword, loading } = useUser()
+  const { updateProfile, changePassword, loading, getCurrentUser } = useUser()
   const { uploadImage, loading: uploadLoading } = useImageUpload()
   const { getFollowersCount, getFollowingList, getUserFollowsCount, getUserFollowers, followUser } = useFollow()
   const [followers, setFollowers] = useState<UserFollower[]>([])
@@ -184,7 +184,7 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
     e.preventDefault()
     const result = await updateProfile(formData)
     if (result?.status === "success") {
-      localStorage.removeItem('user')
+      await getCurrentUser(true) // Force refresh user data
       setOpenModal(undefined)
     }
   }
@@ -197,6 +197,7 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
     }
     const result = await changePassword(passwordData)
     if (result?.status === "success") {
+      await getCurrentUser(true) // Force refresh user data
       setOpenModal(undefined)
       setPasswordData({
         old_password: "",

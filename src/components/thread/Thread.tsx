@@ -37,6 +37,7 @@ const ThreadComponent = ({
 }: ThreadComponentProps) => {
     const navigate = useNavigate();
     const commentsLoadedRef = useRef(false);
+    const scrollPositionRef = useRef(0);
 
     // State for handling UI interactions
     const [showComments, setShowComments] = useState(false);
@@ -198,11 +199,19 @@ const ThreadComponent = ({
     };
 
     const handleImageClick = (imageSrc: string) => {
+        // Lưu vị trí cuộn hiện tại
+        scrollPositionRef.current = window.scrollY;
         setSelectedImage(imageSrc);
+
+        // Cuộn đến giữa trang ngay lập tức
+        const totalHeight = document.documentElement.scrollHeight;
+        window.scrollTo(0, (totalHeight - window.innerHeight) / 2);
     };
 
     const closeImageViewer = () => {
         setSelectedImage(null);
+        // Khôi phục vị trí cuộn ngay lập tức
+        window.scrollTo(0, scrollPositionRef.current);
     };
 
     const handleProfileClick = (userId: number) => {
@@ -239,13 +248,13 @@ const ThreadComponent = ({
         <div className="px-4 my-4 w-200 font-sans relative">
             {/* Image viewer popup */}
             {selectedImage && (
-                <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden" 
+                <div className="fixed inset-0 z-[9999] bg-black overflow-hidden" 
                     style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
                     onClick={closeImageViewer}
                 >
                     <div className="relative w-full h-full flex items-center justify-center">
                         <button 
-                            className="absolute top-4 right-4 text-white p-2 hover:bg-gray-800 rounded-full z-[10000]"
+                            className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full z-[10000] transition-all"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 closeImageViewer();
@@ -256,7 +265,7 @@ const ThreadComponent = ({
                         <img 
                             src={selectedImage} 
                             alt="Enlarged view" 
-                            className="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain"
+                            className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain select-none"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>
@@ -430,7 +439,7 @@ const ThreadComponent = ({
                         {/* Comment input section - replaced with CommentInput component */}
                         {showCommentInput && (
                             <CommentInput
-                                avatar={user.avatar || ''}
+                                avatar={JSON.parse(localStorage.getItem('user') || '{}').avatar}
                                 onSubmit={handleCommentSubmit}
                                 placeholder="Post your reply"
                             />

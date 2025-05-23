@@ -62,7 +62,6 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            // Ensure we have a CSRF token
             const token = csrfToken || await fetchCSRFToken();
             if (!token) {
                 throw new Error('Failed to get CSRF token');
@@ -82,9 +81,23 @@ export const useAuth = () => {
                 throw new Error('Failed to login');
             }
 
+            // Fetch user info immediately after login
+            const userResponse = await fetch(`${API_URL}/auth/users/me/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const result = await userResponse.json();
+            if (userResponse.ok) {
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(result.data));
+            }
+
             // Remove CSRF token from localStorage after successful login
             localStorage.removeItem(CSRF_TOKEN_KEY);
-
+            
             // Redirect using React Router
             navigate('/');
         } catch (err) {
