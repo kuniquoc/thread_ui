@@ -13,6 +13,7 @@ import {
 import { API_BASE_URL } from '../config/api';
 import { useCSRF } from './useCSRF';
 import { useImageUpload } from './useImageUpload';
+import { usePusherContext } from './usePusherContext';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -22,6 +23,7 @@ export const useThread = () => {
     const [threads, setThreads] = useState<Thread[]>([]);
     const { token: csrfToken, fetchCSRFToken } = useCSRF();
     const { uploadImages } = useImageUpload();
+    const { subscribe } = usePusherContext();
 
     // Get all threads
     const getAllThreads = async (page: number = 1): Promise<ThreadsListResponse | null> => {
@@ -202,6 +204,13 @@ export const useThread = () => {
                 }
                 throw new Error(result.detail || 'Failed to create thread');
             }
+
+            // Subscribe to pusher channel for new thread immediately
+            const channel = subscribe(`thread_${result.id}`);
+            if (channel) {
+                console.log('✅ Subscribed to new thread channel:', `thread_${result.id}`);
+            }
+            
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create thread');

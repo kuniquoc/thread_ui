@@ -96,7 +96,21 @@ export const useUser = () => {
             if (!response.ok) {
                 throw new Error(result.message || 'Failed to update profile');
             }
-            setUser(result.data);
+            
+            // After successful profile update, get fresh user data
+            const userResponse = await fetch(`${API_URL}/auth/users/me/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const userData = await userResponse.json();
+            if (userResponse.ok) {
+                setUser(userData.data);
+                localStorage.setItem('user', JSON.stringify(userData.data));
+            }
+            
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update profile');

@@ -63,29 +63,57 @@ const Comment = ({
         console.log('Received Pusher message on Comment:', data);
         console.log('Comment ID:', id);
         console.log('Thread ID:', threadId);
-        console.log('Data:', data.comment_id);
+        console.log('Data:', data);
 
         // Handle comment like update
         if (data.type === 'comment_like_update' && data.comment_id === id) {
             console.log('Received like update:', data.likes_count);
             setTotalLikes(data.likes_count);
         } 
+        // Handle reply like update
+        else if (data.type === 'comment_like_update') {
+            // Check if this is one of our replies
+            if (replies.some(reply => reply.id === data.comment_id)) {
+                setReplies(prevReplies => prevReplies.map(reply => {
+                    if (reply.id === data.comment_id) {
+                        return {
+                            ...reply,
+                            likes_count: data.likes_count,
+                        };
+                    }
+                    return reply;
+                }));
+            } else if (showReplies && repliesLoadedRef.current) {
+                // If replies are shown but the updated reply isn't in our list,
+                // refresh the entire replies list
+                try {
+                    const repliesData = await getReplies(threadId, id);
+                    if (repliesData) {
+                        setReplies(repliesData);
+                    }
+                } catch (error) {
+                    console.error('Failed to refresh replies after like update', error);
+                }
+            }
+        }
         // Handle reply updates
         else if (data.type === 'reply_comment' && data.parent_comment_id === id) {
             console.log('Received new reply:', data);
             setTotalReplies(prev => prev + 1);
             
-            // Load latest replies regardless of previous loading status
-            try {
-                const response = await getReplies(threadId, id);
-                if (response) {
-                    setReplies(response);
-                    repliesLoadedRef.current = true;
-                    // Auto expand replies section when receiving new reply
-                    setShowReplies(true);
+            // Nếu replies đã được load hoặc section đang mở
+            if (showReplies || repliesLoadedRef.current) {
+                try {
+                    const response = await getReplies(threadId, id);
+                    if (response) {
+                        setReplies(response);
+                        repliesLoadedRef.current = true;
+                        // Auto expand replies section when receiving new reply
+                        setShowReplies(true);
+                    }
+                } catch (error) {
+                    console.error('Failed to load replies', error);
                 }
-            } catch (error) {
-                console.error('Failed to load replies', error);
             }
         }
         // Handle reply deletion
@@ -332,7 +360,7 @@ const Comment = ({
             {showReplyForm && (
                 <div className="ml-16 mt-4">
                     <CommentInput
-                        avatar={avatar}
+                        avatar={JSON.parse(localStorage.getItem('user') || '{}').avatar}
                         onSubmit={(content) => handleSubmitReply(content)}
                         placeholder="Post your reply"
                         initialMention={replyToUsername || username}
