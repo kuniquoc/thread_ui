@@ -73,18 +73,27 @@ const Comment = ({
         // Handle reply updates
         else if (data.type === 'reply_comment' && data.parent_comment_id === id) {
             console.log('Received new reply:', data);
-            setTotalReplies(data.comment_count);
+            setTotalReplies(prev => prev + 1);
             
-            // Load latest replies if they have been loaded before
-            if (repliesLoadedRef.current) {
-                try {
-                    const response = await getReplies(threadId, id);
-                    if (response) {
-                        setReplies(response);
-                    }
-                } catch (error) {
-                    console.error('Failed to load replies', error);
+            // Load latest replies regardless of previous loading status
+            try {
+                const response = await getReplies(threadId, id);
+                if (response) {
+                    setReplies(response);
+                    repliesLoadedRef.current = true;
+                    // Auto expand replies section when receiving new reply
+                    setShowReplies(true);
                 }
+            } catch (error) {
+                console.error('Failed to load replies', error);
+            }
+        }
+        // Handle reply deletion
+        else if (data.type === 'reply_deleted' && data.parent_comment_id === id) {
+            console.log('Received reply deletion:', data);
+            setTotalReplies(prev => prev - 1);
+            if (repliesLoadedRef.current) {
+                setReplies(prev => prev.filter(reply => reply.id !== data.reply_id));
             }
         }
     };
@@ -129,26 +138,31 @@ const Comment = ({
     const handleSubmitReply = async (content: string) => {
         try {
             const response = await createComment(threadId, {
-                content: content, // Không thêm @username vì đã được thêm từ CommentInput
+                content: content,
                 parent_comment_id: id
             });
 
             if (response) {
-                // Refresh replies
+                // Tự động cập nhật UI ngay lập tức
+                setTotalReplies(prev => prev + 1);
+                
+                // Load lại replies ngay sau khi tạo reply mới
                 const repliesData = await getReplies(threadId, id);
                 if (repliesData) {
                     setReplies(repliesData);
+                    repliesLoadedRef.current = true;
                 }
 
-                // Show replies if they were hidden
-                if (!showReplies) {
-                    setShowReplies(true);
-                }
-
-                // Hide reply form after submission
+                // Đảm bảo hiển thị replies section
+                setShowReplies(true);
+                
+                // Đóng form reply
                 setShowReplyForm(false);
 
-                // Notify parent if needed
+                // Reset reply to username
+                setReplyToUsername(null);
+
+                // Notify parent nếu cần
                 if (onReplySuccess) {
                     onReplySuccess();
                 }

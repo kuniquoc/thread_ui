@@ -55,18 +55,18 @@ const Reply = ({
 
 		// Handle reply like update
 		if (data.type === 'comment_like_update' && data.comment_id === id) {
-			// Update like count
+			console.log('📝 Received like update for reply:', data);
 			setTotalLikes(data.likes_count);
 
 			// If current user performed the action, update like status
 			const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-			if (currentUser && currentUser.id === userId) {
-				setIsLiked(data.action === 'like');
+			if (currentUser && currentUser.id === data.user_id) {
+				setIsLiked(data.is_liked);
 			}
 		}
-	}, [id, userId]);
+	}, [id]);
 
-	// Subscribe to Pusher channel for this thread
+	// Subscribe to Pusher channel for this thread to receive updates
 	usePusher(`thread_${threadId}`, handlePusherEvent);
 
 	const handleLike = async () => {
